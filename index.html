@@ -853,7 +853,7 @@ rel event: ${rate.rel||0}/s  [${DBG.rel||"-"}]
 abs event: ${rate.abs||0}/s  [${DBG.abs||"-"}]
 view yaw=${yaw}°  pitch=${Math.round(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1,Math.min(1,f.y)))))}°  nudge=${Math.round(THREE.MathUtils.radToDeg(cam2.nudge||0))}°  steps=${DBG.steps||0}
 pos=${camera.position.x.toFixed(2)},${camera.position.z.toFixed(2)}  visible items=${vis}  draw calls=${renderer.info.render.calls}  xr=${renderer.xr.isPresenting}
-${near}`; },250); }
+${items.filter(it=>it.anchor.visible&&it.def.type!=="bomb").map(it=>{ const v=it.anchor.position.clone().project(renderer.xr.isPresenting?renderer.xr.getCamera(camera).cameras[0]:camera); return `${it.def.id}: d=${(it.d||0).toFixed(2)} mix=${it.mix.toFixed(2)} q=${it.q.scale.x.toFixed(2)} m=${it.model.scale.x.toFixed(2)} scr=${v.x.toFixed(1)},${v.y.toFixed(1)},${v.z.toFixed(2)}`; }).join("\n")}`; },250); }
 
 /* ---------- jump scare (kid-friendly ghost) ---------- */
 const camQ=new THREE.Quaternion(),camS=new THREE.Vector3(),fwd=new THREE.Vector3(),upv=new THREE.Vector3(),rightv=new THREE.Vector3();
