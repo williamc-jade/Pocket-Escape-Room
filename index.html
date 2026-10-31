@@ -761,7 +761,7 @@ const easeOutBack=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Ma
 /* ---------- preview controls ---------- */
 const look={yaw:0,pitch:0},move={x:0,y:0},keys={};
 function setupPreviewControls(){ const el=renderer.domElement; let drag=null;
-  el.addEventListener("pointerdown",e=>{ if(state.mode!=="preview")return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointerdown",e=>{ if(state.mode!=="preview"&&!state.manualLook)return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
   el.addEventListener("pointermove",e=>{ if(!drag)return; look.yaw-=(e.clientX-drag.x)*.005; look.pitch=Math.max(-1.3,Math.min(1.3,look.pitch-(e.clientY-drag.y)*.005)); drag={x:e.clientX,y:e.clientY}; });
   el.addEventListener("pointerup",()=>drag=null);
   addEventListener("keydown",e=>{ if(!state.panelOpen) keys[e.key.toLowerCase()]=true; }); addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
@@ -774,30 +774,55 @@ function setupPreviewControls(){ const el=renderer.domElement; let drag=null;
 const cam2={q:new THREE.Quaternion(),off:null,target:new THREE.Vector3(),ori:null,steps:0};
 const _e=new THREE.Euler(),_q0=new THREE.Quaternion(),_q1=new THREE.Quaternion(-Math.sqrt(.5),0,0,Math.sqrt(.5)),_z=new THREE.Vector3(0,0,1),_y=new THREE.Vector3(0,1,0);
 function oriToQuat(a,b,g,o,q){ _e.set(b,a,-g,"YXZ"); q.setFromEuler(_e); q.multiply(_q1); q.multiply(_q0.setFromAxisAngle(_z,-o)); }
-async function startCamMode(resume){
-  const v=$("#camfeed");
-  try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false}); v.srcObject=stream; v.hidden=false; await v.play().catch(()=>{}); }
-  catch(err){ $("#arNote").className="note warn"; $("#arNote").textContent="The camera didn't open ("+(err&&err.name||"blocked")+"). Allow camera access for this page, and open it from a web link (https) rather than a downloaded file."; return; }
-  try{ if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); }catch(e){}
-  try{ if(typeof DeviceMotionEvent!=="undefined"&&DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); }catch(e){}
-  addEventListener("deviceorientation",e=>{ if(e.alpha==null)return; cam2.ori=e; });
+let camStream=null, motionReady=false;
+async function getCamera(){ const tries=[{video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false},{video:{facingMode:"environment"},audio:false},{video:true,audio:false}];
+  let last; for(const c of tries){ try{ return await navigator.mediaDevices.getUserMedia(c); }catch(e){ last=e; if(e.name==="NotAllowedError") break; } }
+  await new Promise(r=>setTimeout(r,700)); try{ return await navigator.mediaDevices.getUserMedia(tries[1]); }catch(e){ throw last||e; } }
+function camError(err,resume){ const n=$("#arNote"); n.className="note warn";
+  n.innerHTML=(err&&err.name==="NotAllowedError")
+    ?`Chrome blocked the camera for this page. Tap the icon left of the web address, then <b>Permissions</b> (or Site settings), set <b>Camera</b> to Allow, and tap Try again.`
+    :`The camera didn't open (${err&&err.name||"unknown error"}). Close other apps using the camera and tap Try again.`;
+  const b=document.createElement("button"); b.className="btn primary"; b.style.marginTop="10px"; b.style.width="100%"; b.textContent="Try again"; b.onclick=()=>startCamMode(resume); n.appendChild(b); }
+function startMotion(){ if(motionReady) return; motionReady=true;
+  // 1) Chrome's Generic Sensor API: a ready-made orientation quaternion, most reliable on Android
+  try{ if("RelativeOrientationSensor" in window){ const sen=new RelativeOrientationSensor({frequency:60,referenceFrame:"screen"});
+      sen.addEventListener("reading",()=>{ if(sen.quaternion){ cam2.sq=sen.quaternion; cam2.src="sensor"; cam2.at=performance.now(); } }); sen.addEventListener("error",()=>{}); sen.start(); } }catch(e){}
+  // 2) classic orientation events (relative or absolute)
+  const h=e=>{ if(e.beta==null&&e.gamma==null)return; if(cam2.src==="sensor"&&performance.now()-cam2.at<500)return; cam2.ori={alpha:e.alpha||0,beta:e.beta||0,gamma:e.gamma||0}; cam2.src="event"; cam2.at=performance.now(); };
+  addEventListener("deviceorientation",h); addEventListener("deviceorientationabsolute",h);
+  // step detection
   let lp=9.8,above=false,last=0;
   addEventListener("devicemotion",e=>{ const a=e.accelerationIncludingGravity; if(!a||a.x==null)return; const m=Math.hypot(a.x,a.y,a.z); lp=lp*.75+m*.25; const now=performance.now();
-    if(!above&&lp>11&&now-last>330){ above=true; last=now; if(state.mode==="cam"&&!state.panelOpen&&!state.done){ const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); f.y=0; if(f.lengthSq()>.01){ f.normalize(); const nx=cam2.target.clone().addScaledVector(f,.5);
-        const blocked=items.some(it=>it.anchor.visible&&Math.hypot(nx.x-it.anchor.position.x,nx.z-it.anchor.position.z)<(it.def.prop?.75:.5));
-        if(!blocked){ cam2.target.copy(nx); } cam2.steps++; } } }
-    else if(above&&lp<10.2) above=false; });
+    if(!above&&lp>11&&now-last>330){ above=true; last=now; stepForward(); } else if(above&&lp<10.2) above=false; });
+}
+function stepForward(){ if(state.mode!=="cam"||state.panelOpen||state.done) return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); f.y=0; if(f.lengthSq()<.01) return; f.normalize();
+  const nx=cam2.target.clone().addScaledVector(f,.5); const blocked=items.some(it=>it.anchor.visible&&Math.hypot(nx.x-it.anchor.position.x,nx.z-it.anchor.position.z)<(it.def.prop?.75:.5));
+  if(!blocked) cam2.target.copy(nx); cam2.steps++; }
+async function startCamMode(resume){
+  const v=$("#camfeed");
+  try{ if(!camStream) camStream=await getCamera(); v.srcObject=camStream; v.hidden=false; await v.play().catch(()=>{}); }
+  catch(err){ return camError(err,resume); }
+  try{ if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); }catch(e){}
+  try{ if(typeof DeviceMotionEvent!=="undefined"&&DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); }catch(e){}
+  try{ if(navigator.permissions) await Promise.all(["accelerometer","gyroscope"].map(n=>navigator.permissions.query({name:n}).catch(()=>null))); }catch(e){}
+  startMotion();
   camera.position.set(0,0,0); cam2.target.set(0,0,0); cam2.off=null;
   begin("cam",resume);
-  setTimeout(()=>{ if(!cam2.ori) toast("Your phone isn't sending motion data, so turning won't move the view. Try the page in Chrome from a web link.",6000); },2500);
+  // no motion data at all → drag to look + on-screen stick, over the live camera
+  setTimeout(()=>{ if(!cam2.src&&state.mode==="cam"){ state.manualLook=true; look.yaw=0; look.pitch=0; $("#stick").hidden=false; document.body.classList.add("preview");
+      toast("Your phone isn't sharing motion data, so drag the screen to turn and use the stick to walk.",7000); } },2500);
 }
 function updateCamMode(dt){
-  const e=cam2.ori; if(e){ const o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
-    oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q);
-    if(!cam2.off){ _e.setFromQuaternion(cam2.q,"YXZ"); cam2.off=new THREE.Quaternion().setFromAxisAngle(_y,-_e.y); }
+  if(state.manualLook){ camera.position.copy(camera.position); return; }
+  let got=false;
+  if(cam2.sq&&cam2.src==="sensor"){ cam2.q.fromArray(cam2.sq); cam2.q.premultiply(_qR); got=true; }
+  else if(cam2.ori){ const e=cam2.ori, o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
+    oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q); got=true; }
+  if(got){ if(!cam2.off){ _e.setFromQuaternion(cam2.q,"YXZ"); cam2.off=new THREE.Quaternion().setFromAxisAngle(_y,-_e.y); }
     camera.quaternion.copy(cam2.off).multiply(cam2.q); }
   camera.position.lerp(cam2.target,Math.min(1,dt*4));
 }
+const _qR=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2); // sensor world (Z up) → scene (Y up)
 
 /* ---------- jump scare (kid-friendly ghost) ---------- */
 const camQ=new THREE.Quaternion(),camS=new THREE.Vector3(),fwd=new THREE.Vector3(),upv=new THREE.Vector3(),rightv=new THREE.Vector3();
@@ -836,7 +861,7 @@ function loop(time){
       if(ROOM.id==="bomb"&&!state.halfHint&&state.elapsed>=ROOM.timer.seconds/2) halfHint(); }
     ambientStep(dt);
   }
-  if(state.mode==="preview"){ const fx=(keys.d?1:0)-(keys.a?1:0)+move.x, fz=(keys.s?1:0)-(keys.w?1:0)+move.y;
+  if(state.mode==="preview"||state.manualLook){ const fx=(keys.d?1:0)-(keys.a?1:0)+move.x, fz=(keys.s?1:0)-(keys.w?1:0)+move.y;
     if(keys.arrowleft)look.yaw+=dt*1.6; if(keys.arrowright)look.yaw-=dt*1.6; const sp=1.3*dt,cy=Math.cos(look.yaw),sy=Math.sin(look.yaw);
     if(!state.panelOpen){ camera.position.x+=(fx*cy+fz*sy)*sp; camera.position.z+=(-fx*sy+fz*cy)*sp; } camera.rotation.set(look.pitch,look.yaw,0,"YXZ"); }
   if(state.mode==="cam") updateCamMode(dt);
@@ -1145,10 +1170,11 @@ function begin(mode,resume){
 }
 async function startAR(resume){
   let session=null;
-  if(xrOK){ const cfgs=[{requiredFeatures:["local"],optionalFeatures:["dom-overlay"],domOverlay:{root:$("#overlay")}},{optionalFeatures:["local","dom-overlay"],domOverlay:{root:$("#overlay")}}];
+  let xrFailed=false; try{ xrFailed=sessionStorage.getItem("xrFailed")==="1"; }catch(e){}
+  if(xrOK&&!xrFailed){ const cfgs=[{requiredFeatures:["local"],optionalFeatures:["dom-overlay"],domOverlay:{root:$("#overlay")}},{optionalFeatures:["local","dom-overlay"],domOverlay:{root:$("#overlay")}}];
     for(const c of cfgs){ try{ session=await navigator.xr.requestSession("immersive-ar",c); break; }catch(e){ session=null; } }
     if(session&&!session.domOverlayState){ try{ await session.end(); }catch(e){} session=null; } }
-  if(!session) return startCamMode(resume);
+  if(!session){ try{ sessionStorage.setItem("xrFailed","1"); }catch(e){} return startCamMode(resume); }
   try{ xrSession=session; renderer.xr.setReferenceSpaceType("local"); await renderer.xr.setSession(session); }
   catch(e){ try{ renderer.xr.setReferenceSpaceType("viewer"); await renderer.xr.setSession(session); }catch(e2){ try{session.end()}catch(e3){} xrSession=null; return startCamMode(resume); } }
   $("#overlay").addEventListener("beforexrselect",e=>e.preventDefault());
