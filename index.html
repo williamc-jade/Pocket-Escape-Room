@@ -61,6 +61,7 @@ body.preview #examine{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 @keyframes pulse{50%{box-shadow:0 8px 44px rgba(240,138,36,.85)}}
 #toast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);transform:translateX(-50%);background:rgba(14,12,20,.9);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;width:max-content;max-width:min(90vw,420px);text-align:center;pointer-events:none;transition:opacity .3s}
 body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
+#tracklost{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 112px);transform:translateX(-50%);background:rgba(226,72,61,.92);color:#fff;font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;width:max-content;max-width:min(90vw,380px);text-align:center;pointer-events:none}
 #flash{position:absolute;inset:0;pointer-events:none;opacity:0}
 #flash.scare{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.85) 0%,rgba(120,255,170,.6) 40%,rgba(0,0,0,.9) 100%);animation:fl .9s cubic-bezier(.1,.7,.3,1)}
 #flash.boom{background:radial-gradient(circle,#fff 0%,#ffd27a 30%,#e2483d 65%,#200 100%);animation:fl 2.2s ease-out}
@@ -212,6 +213,7 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
   <div id="dist" hidden></div>
   <button id="examine" hidden>Examine</button>
   <div id="toast" hidden></div>
+  <div id="tracklost" hidden>Tracking lost. Hold still, then slowly point at furniture or a textured floor.</div>
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="previewTag" hidden>Preview mode. Drag to look, use the stick (or WASD) to walk.</div>
   <div id="flash"></div>
@@ -254,17 +256,18 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
         </div>
       </div>
       <div class="stack">
-        <button class="btn primary" id="arBtn">Start in AR</button>
+        <button class="btn primary" id="arBtn">Start</button>
         <button class="btn" id="continueBtn" hidden>Continue saved game</button>
         <button class="btn ghost" id="previewBtn">Try it without AR</button>
       </div>
       <p class="note" id="arNote">Stand in the middle of the room before you start. Everything appears around you.</p>
+      <button class="linkbtn" id="xrBtn" hidden>Try Chrome's full AR mode (beta)</button><br>
       <button class="linkbtn" id="shareBtn">Share these rooms (QR codes)</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 /* =====================================================================
@@ -730,7 +733,7 @@ function buildItems(){
   ROOM.stations.forEach((def,i)=>{
     const anchor=new THREE.Group(); const a=THREE.MathUtils.degToRad(def.angle), r=state.radius*def.dist;
     anchor.position.set(Math.sin(a)*r,def.y,-Math.cos(a)*r); anchor.userData.baseY=def.y;
-    const q=new THREE.Sprite(new THREE.SpriteMaterial({map:qTex,transparent:true,depthWrite:false})); q.scale.setScalar(.34); anchor.add(q);
+    const q=new THREE.Sprite(new THREE.SpriteMaterial({map:qTex,transparent:true,depthWrite:false,depthTest:false})); q.renderOrder=50; q.scale.setScalar(.34); anchor.add(q);
     const model=MODELS[def.model](); model.scale.setScalar(.0001); anchor.add(model);
     model.rotation.y=Math.atan2(-anchor.position.x,-anchor.position.z)+(model.userData.yawOffset||0);
     const size=def.model==="door"?2.1:def.model==="cage"?1.4:def.prop?1:.4;
@@ -840,9 +843,9 @@ function setManual(on){ state.manualLook=on; $("#stick").hidden=!on; document.bo
   else { cam2.off=null; cam2.started=false; cam2.nudge=0; toast("Motion sensors on. Turn your body to look around.",4000); } }
 
 /* ---------- diagnostics: add &debug=1 to the link ---------- */
-const DBG={n:{}}; const DEBUG=new URLSearchParams(location.search).get("debug")==="1";
-if(DEBUG){ const d=document.createElement("pre"); d.id="dbg"; d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:50;margin:0;padding:8px 10px;background:rgba(0,0,0,.78);color:#8ff0c8;font:11px/1.35 ui-monospace,monospace;border-radius:8px;pointer-events:none;white-space:pre-wrap;max-height:42%;overflow:hidden";
-  document.body.appendChild(d); const rate={}, prev={};
+const DBG={n:{}}; let dbgOn=false;
+function startDebug(){ if(dbgOn)return; dbgOn=true; const d=document.createElement("pre"); d.id="dbg"; d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:50;margin:0;padding:8px 10px;background:rgba(0,0,0,.78);color:#8ff0c8;font:11px/1.35 ui-monospace,monospace;border-radius:8px;pointer-events:none;white-space:pre-wrap;max-height:42%;overflow:hidden";
+  $("#overlay").appendChild(d); const rate={}, prev={};
   setInterval(()=>{ for(const k in DBG.n){ rate[k]=DBG.n[k]-(prev[k]||0); prev[k]=DBG.n[k]; } },1000);
   setInterval(()=>{ if(!camera)return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); const yaw=Math.round(THREE.MathUtils.radToDeg(Math.atan2(-f.x,-f.z)));
     const vis=items.filter(it=>it.anchor.visible).length; const near=items.filter(it=>it.anchor.visible).map(it=>`${it.def.name.slice(0,10)}@${it.def.angle}° ${it.d?it.d.toFixed(1):"?"}m`).join(", ");
@@ -854,6 +857,7 @@ abs event: ${rate.abs||0}/s  [${DBG.abs||"-"}]
 view yaw=${yaw}°  pitch=${Math.round(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1,Math.min(1,f.y)))))}°  nudge=${Math.round(THREE.MathUtils.radToDeg(cam2.nudge||0))}°  steps=${DBG.steps||0}
 pos=${camera.position.x.toFixed(2)},${camera.position.z.toFixed(2)}  visible items=${vis}  draw calls=${renderer.info.render.calls}  xr=${renderer.xr.isPresenting}
 ${items.filter(it=>it.anchor.visible&&it.def.type!=="bomb").map(it=>{ const v=it.anchor.position.clone().project(renderer.xr.isPresenting?renderer.xr.getCamera(camera).cameras[0]:camera); return `${it.def.id}: d=${(it.d||0).toFixed(2)} mix=${it.mix.toFixed(2)} q=${it.q.scale.x.toFixed(2)} m=${it.model.scale.x.toFixed(2)} scr=${v.x.toFixed(1)},${v.y.toFixed(1)},${v.z.toFixed(2)}`; }).join("\n")}`; },250); }
+if(new URLSearchParams(location.search).get("debug")==="1") startDebug();
 
 /* ---------- jump scare (kid-friendly ghost) ---------- */
 const camQ=new THREE.Quaternion(),camS=new THREE.Vector3(),fwd=new THREE.Vector3(),upv=new THREE.Vector3(),rightv=new THREE.Vector3();
@@ -881,7 +885,10 @@ function updateScare(dt,cam,t){ if(scareT<0||!monster)return; scareT+=dt;
 
 /* ---------- main loop ---------- */
 let lastSave=0,lastSec=-1;
-function loop(time){
+let trackLost=false;
+function loop(time,frame){
+  if(frame&&renderer.xr.isPresenting){ try{ const pose=frame.getViewerPose(renderer.xr.getReferenceSpace()); const lost=!pose||pose.emulatedPosition;
+      if(lost!==trackLost){ trackLost=lost; $("#tracklost").hidden=!lost; } }catch(e){} }
   const dt=Math.min(clock.getDelta(),.1),t=time/1000;
   if(!ROOM){ renderer.render(scene,camera); return; }
   if(state.running&&!state.done){
@@ -1157,8 +1164,9 @@ $("#bagChip").onclick=openBag;
 $("#notesChip").onclick=()=>openPanel(`<div class="eyebrow">Notes</div><h2>What you know</h2>${state.notes.length?`<ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul>`:"<p>Nothing yet. Find the question marks.</p>"}<div class="row"><button class="btn primary" id="ok">Back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel);
 $("#muteBtn").onclick=()=>{ state.muted=!state.muted; audio(); if(master)master.gain.value=state.muted?0:1; $("#sndOn").hidden=state.muted; $("#sndOff").hidden=!state.muted; };
 $("#menuBtn").onclick=()=>openPanel(`<div class="eyebrow">Paused</div><h2>${ROOM.title}</h2><p>${ROOM.id==="bomb"?"The clock keeps running.":`Time ${fmt(state.elapsed)}. Hints used ${state.hints}.`}</p>
-  <div class="stack"><button class="btn primary" id="resume">Resume</button>${state.mode==="cam"?`<button class="btn" id="touchCtl">${state.manualLook?"Use motion sensors":"Touch controls (drag to turn)"}</button>`:""}<button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
+  <div class="stack"><button class="btn primary" id="resume">Resume</button>${state.mode==="cam"?`<button class="btn" id="touchCtl">${state.manualLook?"Use motion sensors":"Touch controls (drag to turn)"}</button>`:""}<button class="btn ghost" id="diag">Show diagnostics</button><button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
   b=>{ b.querySelector("#resume").onclick=closePanel;
+       b.querySelector("#diag").onclick=()=>{ startDebug(); closePanel(); };
        const tc=b.querySelector("#touchCtl"); if(tc) tc.onclick=()=>{ setManual(!state.manualLook); closePanel(); }; b.querySelector("#restart").onclick=()=>{ if(ROOM.id==="house")store.clear(); location.href=location.pathname+location.search; }; const x=b.querySelector("#exit"); if(x)x.onclick=()=>xrSession.end(); });
 
 /* ---------- share / QR ---------- */
@@ -1225,7 +1233,7 @@ let xrOK=false;
   try{ xrOK=!!(navigator.xr&&await navigator.xr.isSessionSupported("immersive-ar")); }catch(e){}
   const camOK=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   if(!xrOK&&!camOK){ const b=$("#arBtn"); b.disabled=true; b.textContent="Camera not available here"; $("#arNote").className="note warn"; $("#arNote").textContent="This browser can't open the camera. Open the game link in Chrome or Safari on a phone. You can still try the preview."; }
-  $("#arBtn").onclick=()=>startAR(false); $("#continueBtn").onclick=()=>startAR(true); $("#previewBtn").onclick=()=>begin("preview",false);
+  $("#arBtn").onclick=()=>startCamMode(false); $("#xrBtn").hidden=!xrOK; $("#xrBtn").onclick=()=>{ try{ sessionStorage.removeItem("xrFailed"); }catch(e){} startAR(false); }; $("#continueBtn").onclick=()=>startCamMode(true); $("#previewBtn").onclick=()=>begin("preview",false);
 })();
 </script>
 </body>
