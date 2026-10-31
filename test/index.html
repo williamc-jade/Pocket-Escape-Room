@@ -219,13 +219,13 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
       </div>
       <div class="field">
         <label>Difficulty</label>
-        <div class="seg" id="modeSeg"><button data-m="easy" aria-pressed="true">Easy</button><button data-m="hard" aria-pressed="false">Hard</button></div>
+        <div class="seg" id="modeSeg"><button data-m="easy" aria-pressed="true">Easy</button><button data-m="medium" aria-pressed="false">Medium</button><button data-m="hard" aria-pressed="false">Hard</button></div>
         <p class="note" id="modeNote" style="margin:8px 0 18px">One clue at a time, with hints and arrows.</p>
         <label>Room size</label>
         <div class="seg" id="roomSeg">
-          <button data-r="1.4" aria-pressed="false">Small</button>
-          <button data-r="1.9" aria-pressed="true">Medium</button>
-          <button data-r="2.6" aria-pressed="false">Large</button>
+          <button data-r="1.6" aria-pressed="false">Small</button>
+          <button data-r="2.2" aria-pressed="true">Medium</button>
+          <button data-r="3.0" aria-pressed="false">Large</button>
         </div>
       </div>
       <div class="stack">
@@ -254,9 +254,9 @@ const INVITATION=`<div class="invite"><h3>You're Invited</h3>
   The door will close behind you.<br>Don't worry. Probably.
   <div class="sig">~ The Host</div></div>`;
 
-function houseRoom(hard){
+function houseRoom(level){ const hard=level!=="easy";
   return {
-    id:"house", title:"The House on Hollow Lane", sequential:!hard, hard, timer:{mode:"up"}, ambient:"house", decor:true,
+    id:"house", title:"The House on Hollow Lane", sequential:!hard, hard, level, window:level==="medium"?2:0, timer:{mode:"up"}, ambient:"house", decor:true,
     stations:[
       { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
         lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
@@ -368,7 +368,7 @@ const SAVE_KEY="pocket-escape-house-v1";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
-const state={hard:false,scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
+const state={hard:false,level:"easy",scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:2.2,panelOpen:false,muted:false,scaring:false};
 let renderer,scene,camera,clock,xrSession=null,roomShell,decor=null;
 const items=[]; const camPos=new THREE.Vector3(); const particles=[];
 
@@ -715,9 +715,9 @@ function loop(time){
   const cam=renderer.xr.isPresenting?renderer.xr.getCamera(camera):camera;
   camPos.setFromMatrixPosition(cam.matrixWorld);
   const reveal=Math.min(1.3,state.radius*.6),hide=reveal*1.3;
-  const cands=[];
+  const cands=[]; const act=ROOM.window?items.filter(x=>!isSolved(x)).slice(0,ROOM.window).map(x=>x.i):[]; // medium: first N unsolved are out
   for(const it of items){
-    const solved=isSolved(it), visible=ROOM.sequential?it.i<=state.step:true;
+    const solved=isSolved(it), visible=ROOM.sequential?it.i<=state.step:ROOM.window?(solved||act.includes(it.i)):true;
     it.anchor.visible=visible&&!(it.def.type==="scare"&&(solved||state.scaring))&&!it.gone;
     if(!it.anchor.visible) continue;
     if(!it.def.prop) it.anchor.position.y=it.anchor.userData.baseY+Math.sin(t*1.4+it.i)*.025;
@@ -762,7 +762,7 @@ function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=ROOM
 function renderNotes(){ $("#notesCount").textContent=state.notes.length+"/"+ROOM.stations.filter(s=>s.info).length; }
 function objective(){ const o=$("#objective"); let h="";
   if(!state.done){ if(ROOM.id==="bomb") h=state.notes.length<1?`Search the room for <b>?</b> clues. Then cut the right wire.`:`Keep searching, or go back to <b>the bomb</b> and cut a wire.`;
-    else h=ROOM.hard?`Hard mode · <b>${ROOM.stations.length-state.solved.length}</b> left. Solve everything to escape.`:`Follow the <b>?</b> and walk up to it.`; }
+    else h=ROOM.hard?`${ROOM.level==="medium"?"Medium":"Hard"} mode · <b>${ROOM.stations.length-state.solved.length}</b> left. Solve everything to escape.`:`Follow the <b>?</b> and walk up to it.`; }
   o.innerHTML=h; o.hidden=!h; if(ROOM.id==="house") renderProg(); }
 let examTarget=null;
 function updateHud(near,tgt,cam){
@@ -792,8 +792,8 @@ const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse co
 function hintsFor(d){
   if(d.hints) return d.hints;
   if(d.type==="shift") return [`Each letter moved ${d.shift} step forward. Move each one back ${d.shift}: B becomes A, C becomes B.`,"Top row is what you see, bottom row is what it means:"+alphaTable(A,[...A].map((c,i)=>A[(i-d.shift+26)%26]).join(""))];
-  if(d.type==="atbash") return ["Find each carved letter in the top row and read the letter under it.",`The first letter is ${d.answer[0]}.`];
-  if(d.type==="morse") return ["Tap Play to hear it. Each group of beeps is one letter. Match them with the key.",`The first letter is ${d.answer[0]}.`];
+  if(d.type==="atbash") return ["The alphabet is flipped: A↔Z, B↔Y, C↔X. Find each letter in the top row and read the one under it:"+alphaTable(A,[...A].reverse().join("")),`The first letter is ${d.answer[0]}.`];
+  if(d.type==="morse") return ["Each group of beeps is one letter. Key: "+(d.minikey||[]).join(" · "),`The first letter is ${d.answer[0]}.`];
   if(d.type==="rail") return ["Take one letter from the top row, then one from the bottom row, and keep going back and forth.",`It starts ${d.answer.slice(0,3)}...`];
   if(d.type==="wires") return ["Drag from a wire end on the left to the same colour on the right."];
   if(d.type==="simon") return ["Tap Watch, then tap the gems in the same order. It gets one longer each round."];
@@ -827,13 +827,13 @@ function openStation(it){
   if(d.requires){ const need=d.requires==="all"?items.filter(x=>x!==it).map(x=>x.i):d.requires.map(n=>items.find(x=>x.def.name===n).i);
     const left=need.filter(i=>!state.solved.includes(i)).length;
     if(left) return openPanel(`<div class="eyebrow">Locked</div><h2>${d.name}</h2><p>${d.lockedMsg}</p>${d.requires==="all"?`<p><em>${left} thing${left>1?"s":""} left to solve in the house.</em></p>`:""}<div class="row"><button class="btn primary" id="ok">Step back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); }
-  const H=!!ROOM.hard; const hints=H?[]:hintsFor(d); let hl=0; const lead=H?(d.hardLead||""):d.lead;
+  const H=!!ROOM.hard; const hints=ROOM.level==="hard"?[]:hintsFor(d); let hl=0; const lead=H?(d.hardLead||""):d.lead;
   const typed=["shift","atbash","morse","riddle","number","backwards","capitals","rail"].includes(d.type);
   let mid=displayFor(d);
   if(typed) mid+=`${d.ask&&!H?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
-  openPanel(`<div class="eyebrow">${H?"Hard mode":TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2>${lead?`<p>${lead}</p>`:""}${mid}<div id="hint"></div>
+  openPanel(`<div class="eyebrow">${H?(ROOM.level==="medium"?"Medium mode":"Hard mode"):TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2>${lead?`<p>${lead}</p>`:""}${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
     body.querySelector("#close").onclick=closePanel;
     const hb=body.querySelector("#hintBtn");
@@ -942,13 +942,13 @@ $("#shareBtn").onclick=()=>{ const local=!/^https?:$/.test(location.protocol)||l
     <div class="row"><button class="btn primary" id="ok">Done</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); };
 
 /* ---------- save ---------- */
-function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({hard:state.hard,step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
+function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({level:state.level,step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
 
 /* ---------- start ---------- */
 function pickRoom(id){ state.scenario=id; [...$("#roomPick").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===id)); updateContinue(); }
 $("#roomPick").addEventListener("click",e=>{ const b=e.target.closest(".room"); if(b) pickRoom(b.dataset.s); });
-$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; state.hard=b.dataset.m==="hard"; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
-  $("#modeNote").textContent=state.hard?"Every clue is out at once, in any order. No hints, no keys, no arrows.":"One clue at a time, with hints and arrows."; });
+$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; state.level=b.dataset.m; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $("#modeNote").textContent={easy:"One clue at a time, with hints and arrows.",medium:"Two clues out at a time. No arrows or decoder keys, but hints if you need them.",hard:"Every clue is out at once, in any order. No hints, no keys, no arrows."}[state.level]; });
 $("#roomSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; [...$("#roomSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); state.radius=+b.dataset.r; });
 const saved=store.get();
 function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue where you left off (clue ${saved.step+1})`; }
@@ -959,8 +959,8 @@ function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenari
     :`<div class="eyebrow" style="color:var(--red)">Incoming</div><h3>Five Minutes</h3><p>A bomb, three wires, five minutes. Find the clues and cut the right one.</p>`; })();
 updateContinue();
 function begin(mode,resume){
-  audio(); if(resume&&saved) state.hard=!!saved.hard;
-  ROOM=state.scenario==="bomb"?bombRoom():houseRoom(state.hard);
+  audio(); if(resume&&saved) state.level=saved.level||(saved.hard?"hard":"easy");
+  ROOM=state.scenario==="bomb"?bombRoom():houseRoom(state.level);
   if(resume&&saved) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius});
   if(ROOM.timer.mode==="down") state.remaining=ROOM.timer.seconds;
   state.mode=mode; state.running=true; buildItems();
