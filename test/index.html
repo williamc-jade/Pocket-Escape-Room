@@ -218,6 +218,9 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
         </div>
       </div>
       <div class="field">
+        <label>Difficulty</label>
+        <div class="seg" id="modeSeg"><button data-m="easy" aria-pressed="true">Easy</button><button data-m="hard" aria-pressed="false">Hard</button></div>
+        <p class="note" id="modeNote" style="margin:8px 0 18px">One clue at a time, with hints and arrows.</p>
         <label>Room size</label>
         <div class="seg" id="roomSeg">
           <button data-r="1.4" aria-pressed="false">Small</button>
@@ -251,9 +254,9 @@ const INVITATION=`<div class="invite"><h3>You're Invited</h3>
   The door will close behind you.<br>Don't worry. Probably.
   <div class="sig">~ The Host</div></div>`;
 
-function houseRoom(){
+function houseRoom(hard){
   return {
-    id:"house", title:"The House on Hollow Lane", sequential:true, timer:{mode:"up"}, ambient:"house", decor:true,
+    id:"house", title:"The House on Hollow Lane", sequential:!hard, hard, timer:{mode:"up"}, ambient:"house", decor:true,
     stations:[
       { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
         lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
@@ -279,7 +282,7 @@ function houseRoom(){
         after:"Inside: an empty candy wrapper. From somewhere behind you, something giggles." },
       { name:"?", model:"none", angle:265, dist:1, y:-.1, type:"scare", word:GHOST_WORD,
         after:"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
-      { name:"Portrait", model:"wallPortrait", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
+      { name:"Portrait", model:"wallPortrait", hardLead:"A painting of a smiling man holding a lantern. Letters are carved into the frame.", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
         lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
         ask:"Where is Barnaby?",
         after:"Barnaby is locked in a cage somewhere in this house. Under the portrait, a spider has left a little note." },
@@ -293,7 +296,9 @@ function houseRoom(){
         ask:"What word was red on your invitation?",
         hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
         after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
-      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD,
+      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD, requires:["Coffin"],
+        lockedMsg:"Barnaby waves from inside. <em>\"The lock needs a key! I heard it's hidden somewhere in the house.\"</em>",
+        hardLead:"Barnaby Finch is inside, waving. You turn the rusty key, but the lock wants a word.",
         lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
         display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
         hints:["Think back to the ghost that zoomed at you. It shouted a word.","It's orange, round, and you carve a face into it."],
@@ -311,7 +316,8 @@ function houseRoom(){
       { name:"Doormat Note", model:"note", angle:82, dist:.7, y:-.4, type:"shift", shift:1, answer:"ZIGZAG",
         lead:"A note on the doormat: <em>Every letter took one step forward. A became B.</em>", ask:"Step each letter back by one. What kind of code is on the door?",
         after:"A zigzag code! The front door's lock glows with zigzag letters." },
-      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true,
+      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true, requires:"all",
+        lockedMsg:"Locked tight. The house isn't ready to let you go.",
         lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
         ask:"What is the password?" }
     ],
@@ -362,7 +368,7 @@ const SAVE_KEY="pocket-escape-house-v1";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
-const state={scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
+const state={hard:false,scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
 let renderer,scene,camera,clock,xrSession=null,roomShell,decor=null;
 const items=[]; const camPos=new THREE.Vector3(); const particles=[];
 
@@ -752,11 +758,11 @@ function loop(time){
 
 /* ---------- HUD ---------- */
 function fmt(s){ s=Math.max(0,Math.floor(s)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
-function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=Math.min(state.step+1,n)+"/"+n; }
+function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=ROOM.hard?state.solved.length+"/"+n:Math.min(state.step+1,n)+"/"+n; $("#progChip").firstChild.textContent=ROOM.hard?"Solved ":"Clue "; }
 function renderNotes(){ $("#notesCount").textContent=state.notes.length+"/"+ROOM.stations.filter(s=>s.info).length; }
 function objective(){ const o=$("#objective"); let h="";
   if(!state.done){ if(ROOM.id==="bomb") h=state.notes.length<1?`Search the room for <b>?</b> clues. Then cut the right wire.`:`Keep searching, or go back to <b>the bomb</b> and cut a wire.`;
-    else h=`Follow the <b>?</b> and walk up to it.`; }
+    else h=ROOM.hard?`Hard mode · <b>${ROOM.stations.length-state.solved.length}</b> left. Solve everything to escape.`:`Follow the <b>?</b> and walk up to it.`; }
   o.innerHTML=h; o.hidden=!h; if(ROOM.id==="house") renderProg(); }
 let examTarget=null;
 function updateHud(near,tgt,cam){
@@ -765,7 +771,7 @@ function updateHud(near,tgt,cam){
   const ex=$("#examine"),guide=$("#guide"),dist=$("#dist");
   examTarget=near; ex.hidden=!(near&&!state.panelOpen&&!state.done&&!state.scaring);
   if(near){ const ty=near.def.type; ex.textContent=ty==="bomb"?"Defuse the bomb":near.def.model==="door"?"Unlock the door":near.def.model==="cage"?"Help Barnaby":"Examine the "+near.def.name.toLowerCase(); ex.classList.toggle("isBomb",ty==="bomb"); }
-  if(!tgt||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
+  if(!tgt||ROOM.hard||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
   const view=cam.cameras&&cam.cameras.length?cam.cameras[0]:cam;
   const local=tgt.anchor.position.clone().applyMatrix4(new THREE.Matrix4().copy(cam.matrixWorld).invert());
   const ndc=tgt.anchor.position.clone().project(view); const onScreen=local.z<0&&Math.abs(ndc.x)<.85&&Math.abs(ndc.y)<.8; const W=innerWidth,H=innerHeight;
@@ -794,9 +800,10 @@ function hintsFor(d){
   return [];
 }
 function displayFor(d){
-  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}<small>A→B · B→C · C→D …</small></div>`;
+  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}${ROOM.hard?"":"<small>A→B · B→C · C→D …</small>"}</div>`;
+  if(d.type==="atbash"&&ROOM.hard) return `<div class="cipher">${atbash(d.answer)}</div>`;
   if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div><div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`;
-  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div></div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
+  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}<div class="minikey">${(ROOM.hard?[]:d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div></div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
   if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${NEWS_BODY}</div>`;
   if(d.type==="rail"){ const [t,b]=railRows(d.answer); return `<div class="rail"><div><span>TOP</span>${t}</div><div><span>BOTTOM</span>${b}</div></div>`; }
   if(d.display) return `<div class="cipher type">${d.display}</div>`;
@@ -817,13 +824,16 @@ function letterEntry(body,d,onCheck){
 function openStation(it){
   const d=it.def;
   if(d.type==="bomb") return openBomb(it);
-  const hints=hintsFor(d); let hl=0;
+  if(d.requires){ const need=d.requires==="all"?items.filter(x=>x!==it).map(x=>x.i):d.requires.map(n=>items.find(x=>x.def.name===n).i);
+    const left=need.filter(i=>!state.solved.includes(i)).length;
+    if(left) return openPanel(`<div class="eyebrow">Locked</div><h2>${d.name}</h2><p>${d.lockedMsg}</p>${d.requires==="all"?`<p><em>${left} thing${left>1?"s":""} left to solve in the house.</em></p>`:""}<div class="row"><button class="btn primary" id="ok">Step back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); }
+  const H=!!ROOM.hard; const hints=H?[]:hintsFor(d); let hl=0; const lead=H?(d.hardLead||""):d.lead;
   const typed=["shift","atbash","morse","riddle","number","backwards","capitals","rail"].includes(d.type);
   let mid=displayFor(d);
-  if(typed) mid+=`${d.ask?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
+  if(typed) mid+=`${d.ask&&!H?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
-  openPanel(`<div class="eyebrow">${TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
+  openPanel(`<div class="eyebrow">${H?"Hard mode":TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2>${lead?`<p>${lead}</p>`:""}${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
     body.querySelector("#close").onclick=closePanel;
     const hb=body.querySelector("#hintBtn");
@@ -932,11 +942,13 @@ $("#shareBtn").onclick=()=>{ const local=!/^https?:$/.test(location.protocol)||l
     <div class="row"><button class="btn primary" id="ok">Done</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); };
 
 /* ---------- save ---------- */
-function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
+function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({hard:state.hard,step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
 
 /* ---------- start ---------- */
 function pickRoom(id){ state.scenario=id; [...$("#roomPick").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===id)); updateContinue(); }
 $("#roomPick").addEventListener("click",e=>{ const b=e.target.closest(".room"); if(b) pickRoom(b.dataset.s); });
+$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; state.hard=b.dataset.m==="hard"; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $("#modeNote").textContent=state.hard?"Every clue is out at once, in any order. No hints, no keys, no arrows.":"One clue at a time, with hints and arrows."; });
 $("#roomSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; [...$("#roomSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); state.radius=+b.dataset.r; });
 const saved=store.get();
 function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue where you left off (clue ${saved.step+1})`; }
@@ -947,7 +959,8 @@ function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenari
     :`<div class="eyebrow" style="color:var(--red)">Incoming</div><h3>Five Minutes</h3><p>A bomb, three wires, five minutes. Find the clues and cut the right one.</p>`; })();
 updateContinue();
 function begin(mode,resume){
-  audio(); ROOM=state.scenario==="bomb"?bombRoom():houseRoom();
+  audio(); if(resume&&saved) state.hard=!!saved.hard;
+  ROOM=state.scenario==="bomb"?bombRoom():houseRoom(state.hard);
   if(resume&&saved) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius});
   if(ROOM.timer.mode==="down") state.remaining=ROOM.timer.seconds;
   state.mode=mode; state.running=true; buildItems();
