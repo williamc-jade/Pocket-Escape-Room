@@ -34,7 +34,7 @@ button:disabled{opacity:.4;cursor:default}
 
 #overlay{position:fixed;inset:0;pointer-events:none;z-index:5}
 #overlay > *{pointer-events:auto}
-#overlay.shake{animation:shake2 .4s 2}
+#overlay.shake{animation:shake2 .5s}
 @keyframes shake2{10%,50%,90%{transform:translate(-10px,6px)}30%,70%{transform:translate(10px,-6px)}}
 
 /* HUD */
@@ -61,9 +61,8 @@ body.preview #examine{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 @keyframes pulse{50%{box-shadow:0 8px 44px rgba(240,138,36,.85)}}
 #toast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);transform:translateX(-50%);background:rgba(14,12,20,.9);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;width:max-content;max-width:min(90vw,420px);text-align:center;pointer-events:none;transition:opacity .3s}
 body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
-#tracklost{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 112px);transform:translateX(-50%);background:rgba(226,72,61,.92);color:#fff;font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;width:max-content;max-width:min(90vw,380px);text-align:center;pointer-events:none}
 #flash{position:absolute;inset:0;pointer-events:none;opacity:0}
-#flash.scare{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.85) 0%,rgba(120,255,170,.6) 40%,rgba(0,0,0,.9) 100%);animation:fl .9s cubic-bezier(.1,.7,.3,1)}
+#flash.scare{background:radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 30%,rgba(60,200,150,.55) 100%);animation:fl 1s ease-out}
 #flash.boom{background:radial-gradient(circle,#fff 0%,#ffd27a 30%,#e2483d 65%,#200 100%);animation:fl 2.2s ease-out}
 #flash.win{background:radial-gradient(circle,rgba(255,190,110,.6),rgba(0,0,0,0) 70%);animation:fl 1.4s ease-out}
 @keyframes fl{0%{opacity:1}100%{opacity:0}}
@@ -163,26 +162,6 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
 .stat b{font-family:var(--f-mono);color:var(--accent)}
 .notes li{margin-bottom:8px;color:var(--paper)}
 .big{font-size:44px!important}
-.pslot{flex:1;min-width:0;max-width:150px;min-height:46px;border:1.5px dashed var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:13px;color:var(--accent);padding:6px}
-.pslot.cur{border-color:var(--accent)}
-.itemgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.itemgrid button{padding:12px 10px;border-radius:10px;background:#26212f;font-weight:600;font-size:14px}
-.itemgrid button:active{background:var(--accent);color:#1d0f02}
-.bagsec{margin:18px 0 0}
-.bagsec h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
-.words{display:flex;flex-wrap:wrap;gap:8px}
-.word{font:700 15px var(--f-mono);background:#26212f;border:1px solid var(--accent-dim);color:var(--accent);padding:6px 10px;border-radius:8px}
-.word.ghostw{border-color:var(--ghost);color:var(--ghost)}
-.word small{display:block;font:500 10px var(--f-body);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-.cline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.cline .lbl{font-size:12px;color:var(--muted)}
-.cline .ct{font:500 13px var(--f-mono);color:var(--paper);word-break:break-word}
-.cline .ans{grid-row:1/3;grid-column:2;align-self:center;font:700 14px var(--f-mono);color:var(--ghost)}
-.itemlist{display:flex;flex-wrap:wrap;gap:8px}
-.itemlist span{background:#26212f;border-radius:999px;padding:6px 12px;font-size:13px}
-.storylog p{color:var(--paper);margin:0 0 10px;padding-left:12px;border-left:2px solid var(--line)}
-details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0}
-.empty{color:var(--muted);font-size:14px}
 .qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:8px 0}
 .qr{background:#17141e;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;min-width:0}
 .qr .code{background:#fff;border-radius:8px;padding:8px;display:inline-block;max-width:100%}
@@ -201,8 +180,8 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
 <div id="overlay">
   <div id="hud" hidden>
     <div class="chip" id="timerChip"><span id="timer">00:00</span></div>
-    <div class="chip" id="progChip"><span id="progLbl">Clue</span> <b id="prog">1/11</b></div>
-    <button class="chip" id="bagChip" aria-label="Open your bag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f08a24" stroke-width="2"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Bag <b id="bagCount">1</b></button>
+    <div class="chip" id="progChip">Clue <b id="prog">1/11</b></div>
+    <button class="chip" id="inviteChip" aria-label="Your invitation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f08a24" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Invite</button>
     <button class="chip" id="notesChip" hidden>Notes <b id="notesCount">0</b></button>
     <div class="spacer"></div>
     <button class="chip iconbtn" id="muteBtn" aria-label="Mute sound"><svg id="sndOn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg id="sndOff" hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button>
@@ -213,7 +192,6 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
   <div id="dist" hidden></div>
   <button id="examine" hidden>Examine</button>
   <div id="toast" hidden></div>
-  <div id="tracklost" hidden>Tracking lost. Hold still, then slowly point at furniture or a textured floor.</div>
   <div id="stick" hidden><div id="knob"></div></div>
   <div id="previewTag" hidden>Preview mode. Drag to look, use the stick (or WASD) to walk.</div>
   <div id="flash"></div>
@@ -230,7 +208,7 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
           <button class="room" data-s="house" aria-pressed="true">
             <h3>The House on Hollow Lane</h3>
             <p>A house that only appears on Halloween night. You got an invitation. The door locks behind you.</p>
-            <div class="tags"><span>16 clues</span><span>~25 min</span><span>Ages 7+</span><span>No timer</span></div>
+            <div class="tags"><span>11 clues</span><span>~15 min</span><span>Ages 7+</span><span>No timer</span></div>
           </button>
           <button class="room bombroom" data-s="bomb" aria-pressed="false">
             <h3>Five Minutes</h3>
@@ -238,14 +216,6 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
             <div class="tags"><span>4 clues</span><span>5:00 timer</span><span>Ages 10+</span></div>
           </button>
         </div>
-      </div>
-      <div class="field">
-        <label>Difficulty</label>
-        <div class="seg" id="modeSeg">
-          <button data-m="easy" aria-pressed="true">Easy</button>
-          <button data-m="hard" aria-pressed="false">Hard</button>
-        </div>
-        <p class="note" id="modeNote" style="margin:8px 0 0">One clue at a time, with hints and arrows to guide you.</p>
       </div>
       <div class="field">
         <label>Room size</label>
@@ -256,18 +226,17 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
         </div>
       </div>
       <div class="stack">
-        <button class="btn primary" id="arBtn">Start</button>
+        <button class="btn primary" id="arBtn">Start in AR</button>
         <button class="btn" id="continueBtn" hidden>Continue saved game</button>
         <button class="btn ghost" id="previewBtn">Try it without AR</button>
       </div>
       <p class="note" id="arNote">Stand in the middle of the room before you start. Everything appears around you.</p>
-      <button class="linkbtn" id="xrBtn" hidden>Try Chrome's full AR mode (beta)</button><br>
       <button class="linkbtn" id="shareBtn">Share these rooms (QR codes)</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 /* =====================================================================
@@ -275,154 +244,89 @@ details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6
    angle: degrees around you (0 = straight ahead at start, 90 = right)
    dist: fraction of room radius · y: metres relative to phone height (floor ≈ -1.3)
    ===================================================================== */
-/* Seeded randomness: each game draws its own answers and layout; a saved game keeps its seed. */
-function mulberry(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
-const pick=(r,a)=>a[Math.floor(r()*a.length)];
-const shuffleR=(r,a)=>a.map(v=>[r(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
-function spreadAngles(r,n,fixedFirst){ const step=360/n, off=r()*step*.3; const a=Array.from({length:n},(_,i)=>Math.round(i*step+off)%360); if(!fixedFirst) return shuffleR(r,a); return [0,...shuffleR(r,a.slice(1))]; }
-
-const INVITE_WORDS={LANTERN:"something you carry to light the way",CANDLE:"wax with a little flame on top",FIREFLY:"a little bug that glows at night",MOONBEAM:"light shining down from the moon"};
-const GHOST_WORDS={PUMPKIN:"It's orange and round, and you carve a face into it.",COBWEB:"A spider spins it in dusty corners.",SPIDER:"It has eight legs and spins webs.",CANDY:"Trick-or-treaters fill their bags with it.",POTION:"A witch brews it in her cauldron."};
-function invitationHTML(w,host){ return `<div class="invite"><h3>You're Invited</h3>
+const INVITE_WORD="LANTERN", GHOST_WORD="PUMPKIN";
+const INVITATION=`<div class="invite"><h3>You're Invited</h3>
   to the House on Hollow Lane,<br>which appears for one night only.<br><br>
-  Come at dusk. Bring your cleverest friends.<br>Follow the glow of my <span class="red">${w}</span>.<br><br>
+  Come at dusk. Bring your cleverest friends.<br>Follow the glow of my <span class="red">LANTERN</span>.<br><br>
   The door will close behind you.<br>Don't worry. Probably.
-  <div class="sig">~ ${host?host[0]+host.slice(1).toLowerCase()+", your Host":"The Host"}</div></div>`; }
-// capitalise the letters of `word`, in order, spread through `text`
-function hideCapitals(text,word){ const t=[...text.toLowerCase()]; let prev=-1; const n=word.length;
-  for(let i=0;i<n;i++){ const ch=word[i].toLowerCase(); let start=Math.max(prev+1,Math.floor(i*t.length/n)); let k=t.indexOf(ch,start); if(k<0) k=t.indexOf(ch,prev+1); if(k<0) continue; t[k]=t[k].toUpperCase(); prev=k; }
-  return t.join(""); }
-const NEWS_TEXT=(hour,place)=>`barnaby finch, the friendly town lamplighter, was last seen at ${hour} o'clock on halloween night, walking toward hollow lane. neighbours say he loved riddles and always carried a lantern. it was found by the ${place.toLowerCase()} the next morning, next to his walking stick. if you see him, please tell the sheriff right away.`;
+  <div class="sig">~ The Host</div></div>`;
 
-function houseRoom(seed,hard){
-  const r=mulberry(seed);
-  const INV=pick(r,Object.keys(INVITE_WORDS)), GHOST=pick(r,Object.keys(GHOST_WORDS));
-  const paper=pick(r,["NEWSPAPER","GAZETTE"]), box=pick(r,[["CHEST","Treasure Chest"],["TRUNK","Old Trunk"]]);
-  const chestMsg=pick(r,["RADIO","STATIC","SIGNAL"]), morse=pick(r,["BOO","EEK","BAT","OWL"]);
-  const where=pick(r,["CAGE","IRON CAGE"]), pass=pick(r,["FREEDOM","GOODBYE","MOONRISE","HOMEWARD"]);
-  const verb=pick(r,["READ","FIND","CHECK"]);
-  const keyLetters=[...new Set(morse)], extra=shuffleR(r,["G","S","T","K","N","R","A"].filter(c=>!keyLetters.includes(c))).slice(0,5-keyLetters.length);
-  const HOUR=pick(r,[7,8,9,10,11]), PLACE=pick(r,["GATE","GARDEN","WELL","FENCE"]), HOST=pick(r,["MORTIMER","GRIMSBY","VESPER","HOLLOWAY"]);
-  const glass=pick(r,["MIRROR","LOOKING GLASS"]);
-  const ING={rings:"Brass bell",reflects:"Mirror shard",unlocks:"Rusty key"}; const ingOrder=shuffleR(r,["rings","reflects","unlocks"]);
-  const recipe=`First, something that ${ingOrder[0]}. Then, something that ${ingOrder[1]}. Last, something that ${ingOrder[2]}.`;
-  const N=16, ang=spreadAngles(r,N,!hard);
-  const st=[
-    { id:"table", name:"Dining Table", model:"table", dist:.8, y:-.58, prop:true, type:"backwards", answer:paper,
-      lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
-      hardLead:"A place card sits by your chair.",
-      display:[...(verb+" THE "+paper+".")].reverse().join(""), ask:"What does the card tell you to "+verb.toLowerCase()+"?",
-      hints:["Try reading it from right to left.",`Read it backwards: ${verb} THE ...?`],
-      after:`${verb[0]+verb.slice(1).toLowerCase()} the ${paper==="GAZETTE"?"Gazette":"newspaper"}. There's an old one pinned to a crumbling wall.` },
-    { id:"news", name:"Old Newspaper", model:"wallNews", dist:1, y:-.45, prop:true, type:"capitals", answer:box[0], newsBody:hideCapitals(NEWS_TEXT(HOUR,PLACE),box[0]),
-      lead:"Probably just a Halloween decoration. Some of the letters look odd, though.", hardLead:"",
-      ask:"Circle the capital letters. What do they spell?",
-      hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.",`Write down only the capital letters, in order. There are ${box[0].length}.`],
-      after:`${box[0].split("").join("-")}. A strange thing to hide in a newspaper. Find the ${box[0].toLowerCase()}.` },
-    { id:"chest", name:box[1], model:"chest", dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:chestMsg,
-      lead:"The lock has a note: <em>Every letter took one step forward. A became B.</em>", hardLead:"Letters scratched into the lock:",
-      ask:"Step each letter back by one. What is the word?",
-      after:"Inside: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
-    { id:"radio", name:"Old Radio", model:"radio", dist:.95, y:-.5, type:"morse", answer:morse,
-      lead:"The radio beeps the same signal over and over. A key is taped to its side.", hardLead:"The radio beeps the same signal over and over.", ask:"What is the radio saying?",
-      minikey:shuffleR(r,[...keyLetters,...extra]).map(c=>c+" "+MORSE[c]),
-      after:`"${morse}"? From somewhere behind you, something giggles.` },
-    { id:"ghost", name:"?", model:"none", dist:1, y:-.1, type:"scare", word:GHOST,
-      after:hard?"A ghost! It shouted a word as it zoomed past. Remember it.":"A ghost! It zoomed away, but it shouted a word. Remember it. Somewhere, a clock starts ticking." },
-    { id:"clock", name:"Grandfather Clock", model:"gclock", dist:1, y:-.35, prop:true, type:"number", answer:String(HOUR), labelY:1.15,
-      lead:"The clock's hands spin wildly. A brass plate reads: <em>Set me to the hour Barnaby went missing.</em>", hardLead:"A brass plate reads: <em>Set me to the hour Barnaby went missing.</em>",
-      display:"WHAT HOUR WAS BARNABY LAST SEEN?", ask:"Set the hour (1 to 12):",
-      hints:["The newspaper story says when he was last seen.","Check your bag: the newspaper clipping. Look for o'clock."],
-      after:`The clock chimes ${HOUR} times. A hidden drawer slides open. Inside is a dusty spellbook.` },
-    { id:"book", name:"Spellbook", model:"spellbook", dist:1, y:-.62, prop:true, type:"shift", shift:1, answer:glass, labelY:.55,
-      lead:"The spellbook falls open to a page with a recipe. One line is written in a shifted code. <em>A became B.</em>", hardLead:"The spellbook falls open. One line is written strangely:",
-      ask:"Step each letter back by one. Where should you look?",
-      after:`A recipe page slips out: <em>${recipe}</em> Below it: <em>Ask the ${glass.toLowerCase()} who invited you.</em>` },
-    { id:"mirror", name:"Cracked Mirror", model:"standMirror", dist:1, y:-.35, prop:true, type:"backwards", answer:HOST, labelY:1.1,
-      lead:"Your reflection mouths a question. The words appear in the glass, backwards:", hardLead:"Words appear in the glass:",
-      display:[..."WHO SIGNED YOUR INVITATION?"].reverse().join(""), ask:"Who signed your invitation?",
-      hints:["Read it backwards first. Then check your invitation in your bag.","Look at the very bottom of the invitation, where it's signed."],
-      after:"The mirror cracks with a sharp snap. A shard drops into your hand. Across the room, a portrait's eyes follow you." },
-    { id:"portrait", name:"Portrait", model:"wallPortrait", dist:1, y:-.4, prop:true, type:"atbash", answer:where,
-      lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
-      hardLead:"A painting of a smiling man holding a lantern. Letters are carved into the frame.", ask:"Where is Barnaby?",
-      after:`Barnaby is locked in a cage somewhere in this house. Under the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>` },
-    { id:"coffin", name:"Coffin", model:"coffin", dist:.95, y:-1.02, prop:true, type:"riddle", answer:INV,
-      lead:"Carved on the lid: <em>I open only for invited guests.</em>", hardLead:"Carved on the lid: <em>I open only for invited guests.</em>",
-      display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.", ask:"What word was red on your invitation?",
-      hints:["Tap Bag at the top of the screen to read your invitation again.",`It's ${INVITE_WORDS[INV]}.`],
-      after:"The lid creaks open. No vampire, just a rusty old key. Nearby, a cauldron starts to bubble." },
-    { id:"cauldron", name:"Cauldron", model:"cauldron", dist:1, y:-1.05, prop:true, type:"pick", requires:["chest","mirror","coffin"], labelY:.6,
-      order:ingOrder.map(k=>ING[k]), answer:ingOrder.map(k=>ING[k].split(" ")[1].toUpperCase()).join(" "), recipe,
-      lockedMsg:"The cauldron bubbles, but you don't have the right things to put in it yet.",
-      lead:"The cauldron wants the recipe from the spellbook. Drop the right things in, in the right order:", hardLead:"A bubbling cauldron. It wants three things, in the right order.",
-      hints:["Read the recipe page again. It's in your bag, under the story so far.","Something that rings came from the chest. Something that reflects came from the mirror. Something that unlocks came from the coffin."],
-      after:"Green smoke twists into the shape of a ghost. It hisses: <em>\"Only MY word opens the cage.\"</em>" },
-    { id:"cage", name:"Iron Cage", model:"cage", dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST, requires:["coffin"],
-      lockedMsg:"Barnaby waves from inside. <em>\"The lock needs a key! I heard the ghost hid it somewhere.\"</em>",
-      lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
-      hardLead:"Barnaby Finch is inside, waving. You turn the rusty key, but the lock wants a word.",
-      display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
-      hints:["Think back to the ghost that zoomed at you. It shouted a word.",GHOST_WORDS[GHOST]],
-      after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"Oh no, my lantern! I dropped it when the ghost grabbed me. Can you find it?\"</em>" },
-    { id:"lantern", name:"Barnaby's Lantern", model:"lanternProp", dist:.9, y:-1.15, prop:true, type:"riddle", answer:PLACE, requires:["cage"], labelY:.45,
-      lockedMsg:"An old lantern, cold and dark. Someone must be missing it.",
-      lead:"<em>\"That's it! But it won't light until I remember where it was found. Wasn't that in the newspaper?\"</em>", hardLead:"An old lantern, cold and dark. A tag is tied to the handle:",
-      display:"WHERE WAS I FOUND?", ask:"Where was the lantern found?",
-      hints:["The newspaper story says where his lantern was found.","Check your bag: the newspaper clipping. Look for found by the..."],
-      after:"The lantern bursts into warm light. Barnaby grins. <em>\"The house only lets people go when it's happy. Play its music box!\"</em>" },
-    { id:"music", name:"Music Box", model:"musicbox", dist:.75, y:-.55, type:"simon",
-      lead:"A little music box with four coloured gems. Watch which ones light up, then play them back.", hardLead:"",
-      after:"The house hums a happy tune. Somewhere, a fuse box sparks." },
-    { id:"fuse", name:"Fuse Box", model:"wallFuse", dist:1, y:-.4, prop:true, type:"wires",
-      lead:"The front door's lock has no power. Reconnect each wire to its matching colour.", hardLead:"",
-      after:"The lights flicker on. The front door's lock glows with zigzag letters." },
-    { id:"door", name:"Front Door", model:"door", dist:1.05, y:-.32, prop:true, type:"rail", answer:pass, final:true, requires:"all",
-      lockedMsg:"Locked tight. The house isn't ready to let you go.",
-      lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
-      hardLead:"Two rows of glowing letters on the lock.", ask:"What is the password?" }
-  ];
-  const ITEMS={table:"Place card",news:"Newspaper clipping",chest:"Brass bell",book:"Recipe page",mirror:"Mirror shard",coffin:"Rusty key",cage:"Barnaby (rescued!)",lantern:"Barnaby's lantern",music:"Music box tune"};
-  // two rings so neighbouring props don't crowd each other
-  st.forEach((d,i)=>{ d.angle=ang[i]; d.item=ITEMS[d.id]; });
-  [...st].sort((a,b)=>a.angle-b.angle).forEach((d,k)=>{ d.dist=k%2?.72:1.1; if(d.id==="table"&&!hard) d.dist=.8; });
-  return { id:"house", host:HOST, intro:"A house appears on Hollow Lane once a year, on Halloween night, and nobody knows why. This year, you got an invitation. The moment you stepped inside, the door locked behind you.", title:"The House on Hollow Lane", sequential:!hard, hard, timer:{mode:"up"}, ambient:"house", decor:true, inviteWord:INV, stations:st,
-    ending:"The front door swings open into cool night air. Barnaby lights his lantern and tips his hat. \"Same time next year?\" Behind you, the house on Hollow Lane fades away like fog." };
+function houseRoom(){
+  return {
+    id:"house", title:"The House on Hollow Lane", sequential:true, timer:{mode:"up"}, ambient:"house", decor:true,
+    stations:[
+      { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
+        lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
+        display:".REPAPSWEN EHT DAER", ask:"What does the card tell you to read?",
+        hints:["Try reading it from right to left.","Read it backwards: READ THE ... ?"],
+        after:"Read the newspaper. There's an old one pinned to a crumbling wall." },
+      { name:"Old Newspaper", model:"wallNews", angle:60, dist:1, y:-.45, prop:true, type:"capitals", answer:"CHEST",
+        lead:"Probably just a Halloween decoration. Some of the letters look odd, though.",
+        ask:"Circle the capital letters. What do they spell?",
+        hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.","Write down only the capital letters, in order. There are five."],
+        after:"C-H-E-S-T. A strange thing to hide in a newspaper. Find the chest." },
+      { name:"Treasure Chest", model:"chest", angle:105, dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:"RADIO",
+        lead:"The chest's lock has a note: <em>Every letter took one step forward. A became B.</em>",
+        ask:"Step each letter back by one. What is the word?",
+        after:"Inside the chest: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
+      { name:"Old Radio", model:"radio", angle:150, dist:.95, y:-.5, type:"morse", answer:"BOO",
+        lead:"The radio beeps the same signal over and over. A key is taped to its side.", ask:"What is the radio saying?",
+        minikey:["B -...","G --.","O ---","S ...","T -"],
+        after:"Boo? From somewhere behind you, something giggles." },
+      { name:"?", model:"none", angle:265, dist:1, y:-.1, type:"scare", word:GHOST_WORD,
+        after:"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
+      { name:"Portrait", model:"wallPortrait", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
+        lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
+        ask:"Where is Barnaby?",
+        after:"Barnaby is locked in a cage somewhere in this house. Underneath the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>" },
+      { name:"Coffin", model:"coffin", angle:190, dist:.95, y:-1.02, prop:true, type:"riddle", answer:INVITE_WORD,
+        lead:"Carved on the lid: <em>I open only for invited guests.</em>", display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.",
+        ask:"What word was red on your invitation?",
+        hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
+        after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
+      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD,
+        lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
+        display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
+        hints:["Think back to the ghost that zoomed at you. It shouted a word.","It's orange, round, and you carve a face into it."],
+        after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"But the front door is locked. The house only lets people go when it's happy. Play its music box!\"</em>" },
+      { name:"Music Box", model:"musicbox", angle:300, dist:.75, y:-.55, type:"simon",
+        lead:"A little music box with four coloured gems. Watch which ones light up, then play them back.",
+        after:"The house hums a happy tune. Over by the table, a fuse box sparks." },
+      { name:"Fuse Box", model:"wallFuse", angle:28, dist:1, y:-.4, prop:true, type:"wires",
+        lead:"The front door's lock has no power. Reconnect each wire to its matching colour.",
+        after:"The lights flicker on. The front door's lock glows with zigzag letters." },
+      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true,
+        lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
+        ask:"What is the password?" }
+    ],
+    ending:"The front door swings open into cool night air. Barnaby lights his lantern and tips his hat. \"Same time next year?\" Behind you, the house on Hollow Lane fades away like fog."
+  };
 }
 
-function bombRoom(seed,hard){
-  const r=mulberry(seed);
-  const [correct,w1,w2]=shuffleR(r,["RED","GREEN","BLUE"]);
-  const RQ={RED:["I'm the colour of a fire engine, a stop sign, and a ripe strawberry.","Roses are me, so are ladybugs and ketchup."],
-            GREEN:["I'm the colour of fresh grass, a go light, and a frog.","Limes, leaves, and pickles all wear me."],
-            BLUE:["I'm the colour of a clear sky, the deep ocean, and a blueberry.","Jeans, bluebirds, and the sea are all me."]};
-  const rq=pick(r,RQ[correct]);
-  const noteVerb=pick(r,["NOT","NEVER","SKIP","AVOID"]);
-  const seqs=[["1 · 1 · 2 · 3 · 5 · 8 · ?","13",["Each number comes from the two before it.","Add the last two: 5 + 8."]],
-              ["2 · 4 · 8 · 16 · ?","32",["Look at how each number relates to the one before.","Each number doubles."]],
-              ["3 · 6 · 9 · 12 · ?","15",["Look at the gap between numbers.","Add 3 each time."]],
-              ["1 · 4 · 9 · 16 · ?","25",["Think of 1×1, 2×2, 3×3...","5 × 5."]],
-              ["50 · 45 · 40 · 35 · ?","30",["Look at the gap between numbers.","Take away 5 each time."]]];
-  const [disp,num,nh]=pick(r,seqs);
-  const ang=spreadAngles(r,4,false); const dists=[1,1,.95,.9];
-  const st=[
-    { id:"bomb", name:"The Bomb", model:"bomb", angle:0, dist:.7, y:-.4, type:"bomb", always:true,
-      lead:"Three wires. Cut the right one and it stops. Cut the wrong one and it doesn't." },
-    { id:"note", name:"Torn Note", model:"note", dist:dists[0], y:-.15, type:"shift", shift:1, answer:noteVerb+" "+w1, info:true,
-      lead:"A note taped under the desk: <em>Every letter took one step forward. A became B.</em>", hardLead:"A note taped under the desk:", ask:"Step each letter back by one:",
-      after:`Do NOT cut the ${w1} wire.` },
-    { id:"sensor", name:"Sensor Panel", model:"panel", dist:dists[1], y:-.1, type:"wires", info:true,
-      lead:"The tripwire sensor is disconnected. Reconnect it to read the log.", hardLead:"",
-      after:`Sensor log: the ${w2} wire is live. Cutting it sets off the charge.` },
-    { id:"lockbox", name:"Lock Box", model:"lockbox", dist:dists[2], y:-.35, type:"number", answer:num, info:true,
-      lead:"A two-digit lock. Scratched on the lid:", hardLead:"Scratched on the lid:", display:disp, ask:"What comes next?", hints:nh,
-      after:`Inside is a card with a riddle: "${rq} Cut me."` },
-    { id:"keypad", name:"Override Keypad", model:"keypad", dist:dists[3], y:-.2, type:"simon", bonus:45,
-      lead:"An override panel. Watch the lights, then repeat the pattern to buy time.", hardLead:"",
-      after:"Override accepted. 45 seconds added to the clock." }
-  ];
-  st.slice(1).forEach((d,i)=>d.angle=[95,150,200,285][i]+Math.round((r()-.5)*30));
-  return { id:"bomb", intro:"A bomb, three wires, five minutes. Somewhere in this room are the clues that say which wire to cut.", title:"Five Minutes", sequential:false, hard, timer:{mode:"down",seconds:300}, ambient:"tick", correct, wrong:[w1,w2], stations:st };
+function bombRoom(){
+  const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+  const [correct,w1,w2]=shuffle(["RED","GREEN","BLUE"]);
+  const rq={RED:"I'm the colour of a fire engine, a stop sign, and a ripe strawberry.",GREEN:"I'm the colour of fresh grass, a go light, and a frog.",BLUE:"I'm the colour of a clear sky, the deep ocean, and a blueberry."}[correct];
+  return {
+    id:"bomb", title:"Five Minutes", sequential:false, timer:{mode:"down",seconds:300}, ambient:"tick", correct,
+    stations:[
+      { name:"The Bomb", model:"bomb", angle:0, dist:.7, y:-.4, type:"bomb", always:true,
+        lead:"Three wires. Cut the right one and it stops. Cut the wrong one and it doesn't." },
+      { name:"Torn Note", model:"note", angle:95, dist:1, y:-.15, type:"shift", shift:1, answer:"NOT "+w1, info:true,
+        lead:"A note taped under the desk: <em>Every letter took one step forward. A became B.</em>", ask:"Step each letter back by one:",
+        after:`Do NOT cut the ${w1} wire.` },
+      { name:"Sensor Panel", model:"panel", angle:200, dist:1, y:-.1, type:"wires", info:true,
+        lead:"The tripwire sensor is disconnected. Reconnect it to read the log.",
+        after:`Sensor log: the ${w2} wire is live. Cutting it sets off the charge.` },
+      { name:"Lock Box", model:"lockbox", angle:285, dist:.95, y:-.35, type:"number", answer:"13", info:true,
+        lead:"A two-digit lock. Scratched on the lid:", display:"1 · 1 · 2 · 3 · 5 · 8 · ?", ask:"What comes next?",
+        hints:["Each number comes from the two before it.","Add the last two: 5 + 8."],
+        after:`Inside is a card with a riddle: "${rq} Cut me."` },
+      { name:"Override Keypad", model:"keypad", angle:150, dist:.9, y:-.2, type:"simon", bonus:45,
+        lead:"An override panel. Watch the lights, then repeat the pattern to buy time.",
+        after:"Override accepted. 45 seconds added to the clock." }
+    ]
+  };
 }
 
 /* =====================================================================
@@ -436,12 +340,13 @@ const atbash=t=>t.replace(/[A-Z]/g,c=>A[25-A.indexOf(c)]);
 const toMorse=t=>t.split(" ").map(w=>[...w].map(c=>MORSE[c]).join("  ")).join("   /   ");
 const railRows=w=>[[...w].filter((_,i)=>i%2===0).join(""),[...w].filter((_,i)=>i%2===1).join("")];
 const alphaTable=(top,bot)=>{ top=[...top]; bot=[...bot]; const half=Math.ceil(top.length/2); return `<div class="tbl">${[0,half].map(s=>`<table><tr>${top.slice(s,s+half).map(c=>`<td>${c}</td>`).join("")}</tr><tr>${bot.slice(s,s+half).map(c=>`<td style="color:#f08a24">${c}</td>`).join("")}</tr></table>`).join("")}</div>`; };
+const NEWS_BODY=`barnaby finCh, the friendly town lamplighter, was last seen walking toward Hollow lane on halloween night. nEighbours say he loved riddles and always carried hiS lantern. iT was found in the grass the next morning. if you see him, please tell the sheriff.`;
 
 const SAVE_KEY="pocket-escape-house-v1";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
-const state={seed:1,hard:false,scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
+const state={scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
 let renderer,scene,camera,clock,xrSession=null,roomShell,decor=null;
 const items=[]; const camPos=new THREE.Vector3(); const particles=[];
 
@@ -474,10 +379,7 @@ const sfx={
   wind(){ noise(3,0,.05,"bandpass",400,900,3); },
   owl(){ tone(420,.35,0,"sine",.07,380); tone(420,.5,.5,"sine",.07,360); },
   boo(){ noise(1,0,.3,"bandpass",300,1800,2); tone(330,.9,.25,"sine",.28,150); tone(336,.9,.25,"triangle",.14,152); tone(660,.25,.25,"sine",.08,500); },
-  giggle(){ [900,1000,900,1050,950].forEach((f,i)=>tone(f,.09,i*.1,"sine",.06,f*1.2)); },
-  heartbeat(){ [0,.28,.9,1.15].forEach(w=>{ tone(55,.18,w,"sine",.5,40); noise(.08,w,.12,"lowpass",180); }); },
-  scream(){ noise(1.3,0,.9,"bandpass",1200,3800,1.5); noise(.5,0,.8,"lowpass",900,60); tone(180,1.1,0,"sawtooth",.32,760); tone(191,1.1,0,"sawtooth",.28,800); tone(254,1.1,0,"square",.18,1100);
-    tone(48,.7,0,"sine",.8,30); [523,554,740].forEach(f=>tone(f,.9,.02,"sawtooth",.1,f*1.4)); }
+  giggle(){ [900,1000,900,1050,950].forEach((f,i)=>tone(f,.09,i*.1,"sine",.06,f*1.2)); }
 };
 function playMorse(text,led){ const a=audio(); if(!a)return; const u=.1; let t=0;
   for(const w of text.split(" ")){ for(const c of w){ for(const s of MORSE[c]){ const d=s==="."?u:u*3; tone(700,d,t,"sine",.2);
@@ -497,28 +399,22 @@ function labelTex(text){ return canvasTex(512,96,(g,w,h)=>{ g.font='600 40px Fig
   g.fillStyle="rgba(14,12,20,.84)"; rr(g,(w-tw)/2,14,tw,68,34); g.fill(); g.strokeStyle="rgba(240,138,36,.6)"; g.lineWidth=2; g.stroke();
   g.fillStyle="#f3e9d6"; g.textAlign="center"; g.textBaseline="middle"; g.fillText(text,w/2,50); }); }
 function ghostTex(word){ return canvasTex(512,640,(g,w,h)=>{
-  const glow=g.createRadialGradient(256,280,30,256,300,320); glow.addColorStop(0,"rgba(143,240,200,.45)"); glow.addColorStop(1,"rgba(143,240,200,0)"); g.fillStyle=glow; g.fillRect(0,0,w,h);
-  // tattered sheet
-  const body=g.createLinearGradient(0,50,0,600); body.addColorStop(0,"#eef6f2"); body.addColorStop(.6,"#a9c4bb"); body.addColorStop(1,"rgba(90,120,110,.2)");
-  g.fillStyle=body; g.beginPath(); g.moveTo(84,300); g.bezierCurveTo(70,70,442,70,428,300); g.lineTo(452,560);
-  for(let i=0;i<9;i++){ const x0=452-i*41; g.lineTo(x0-14,620-((i*37)%50)); g.lineTo(x0-41,548); } g.lineTo(84,300); g.fill();
-  // clawed arms reaching out
-  g.beginPath(); g.moveTo(96,300); g.quadraticCurveTo(10,300,6,220); g.lineTo(24,240); g.lineTo(20,200); g.lineTo(40,232); g.lineTo(50,196); g.lineTo(60,240); g.quadraticCurveTo(80,280,110,280); g.fill();
-  g.beginPath(); g.moveTo(416,300); g.quadraticCurveTo(502,300,506,220); g.lineTo(488,240); g.lineTo(492,200); g.lineTo(472,232); g.lineTo(462,196); g.lineTo(452,240); g.quadraticCurveTo(432,280,402,280); g.fill();
-  // deep sockets
-  g.fillStyle="#07050a"; for(const [x,r] of [[192,-.35],[320,.35]]){ g.save(); g.translate(x,212); g.rotate(r); g.beginPath(); g.ellipse(0,0,50,38,0,0,Math.PI*2); g.fill(); g.restore(); }
-  // angry brows
-  g.strokeStyle="#07050a"; g.lineWidth=14; g.lineCap="round"; g.beginPath(); g.moveTo(140,160); g.lineTo(236,196); g.moveTo(372,160); g.lineTo(276,196); g.stroke();
-  // glowing slit eyes
-  for(const [x,r] of [[196,-.3],[316,.3]]){ g.save(); g.translate(x,216); g.rotate(r); const e=g.createRadialGradient(0,0,1,0,0,34); e.addColorStop(0,"#eaffd0"); e.addColorStop(.35,"#7dff6a"); e.addColorStop(1,"rgba(80,255,120,0)");
-    g.fillStyle=e; g.beginPath(); g.ellipse(0,0,34,12,0,0,Math.PI*2); g.fill(); g.restore(); }
-  // huge jagged mouth
-  g.fillStyle="#07050a"; g.beginPath(); g.moveTo(150,300); g.quadraticCurveTo(256,250,362,300); g.quadraticCurveTo(350,440,256,452); g.quadraticCurveTo(162,440,150,300); g.fill();
-  g.fillStyle="#f4f1e6"; for(let i=0;i<8;i++){ const x=170+i*25; g.beginPath(); g.moveTo(x,292-Math.sin(i/7*Math.PI)*22); g.lineTo(x+22,292-Math.sin((i+1)/7*Math.PI)*22); g.lineTo(x+11,330); g.fill(); }
-  for(let i=0;i<6;i++){ const x=192+i*22; g.beginPath(); g.moveTo(x,440); g.lineTo(x+20,440); g.lineTo(x+10,410); g.fill(); }
+  const glow=g.createRadialGradient(256,300,40,256,300,300); glow.addColorStop(0,"rgba(143,240,200,.35)"); glow.addColorStop(1,"rgba(143,240,200,0)"); g.fillStyle=glow; g.fillRect(0,0,w,h);
+  // sheet body with wavy hem
+  const body=g.createLinearGradient(0,60,0,560); body.addColorStop(0,"#ffffff"); body.addColorStop(1,"#cfe9e0");
+  g.fillStyle=body; g.beginPath(); g.moveTo(96,300); g.bezierCurveTo(96,90,416,90,416,300); g.lineTo(440,540);
+  for(let i=0;i<6;i++){ const x0=440-i*64; g.quadraticCurveTo(x0-16,600,x0-32,540); g.quadraticCurveTo(x0-48,490,x0-64,540); }
+  g.lineTo(96,300); g.fill();
+  // little arms
+  g.beginPath(); g.ellipse(84,330,40,22,-.6,0,Math.PI*2); g.ellipse(428,330,40,22,.6,0,Math.PI*2); g.fill();
+  // eyes + mouth
+  g.fillStyle="#141018"; g.beginPath(); g.ellipse(200,240,34,52,0,0,Math.PI*2); g.ellipse(312,240,34,52,0,0,Math.PI*2); g.fill();
+  g.fillStyle="#fff"; g.beginPath(); g.arc(210,222,10,0,Math.PI*2); g.arc(322,222,10,0,Math.PI*2); g.fill();
+  g.fillStyle="#141018"; g.beginPath(); g.ellipse(256,345,40,54,0,0,Math.PI*2); g.fill();
+  g.fillStyle="#ff9fb0"; g.beginPath(); g.ellipse(160,300,22,12,0,0,Math.PI*2); g.ellipse(352,300,22,12,0,0,Math.PI*2); g.fill();
   // the word on its belly
-  g.save(); g.translate(256,520); g.rotate(-.05); g.font='78px Creepster, Georgia, serif'; g.textAlign="center"; g.textBaseline="middle";
-  g.shadowColor="rgba(240,138,36,.95)"; g.shadowBlur=18; g.fillStyle="#f08a24"; g.fillText(word,0,0); g.restore();
+  g.save(); g.translate(256,460); g.rotate(-.04); g.font='84px Creepster, Georgia, serif'; g.textAlign="center"; g.textBaseline="middle";
+  g.shadowColor="rgba(240,138,36,.9)"; g.shadowBlur=16; g.fillStyle="#f08a24"; g.fillText(word,0,0); g.restore();
 }); }
 function newsTex(){ return canvasTex(384,512,(g,w,h)=>{ g.fillStyle="#e8e0cc"; g.fillRect(0,0,w,h);
   g.fillStyle="#211c14"; g.textAlign="center"; g.font='34px "IM Fell English SC", Georgia, serif'; g.fillText("Hollow Lane Gazette",w/2,46);
@@ -547,7 +443,6 @@ const M={ brass:()=>new THREE.MeshStandardMaterial({color:0xd9a441,metalness:.7,
   wood:()=>new THREE.MeshStandardMaterial({color:0x5a3520,roughness:.75}), darkwood:()=>new THREE.MeshStandardMaterial({color:0x2e1c16,roughness:.7}),
   stone:()=>new THREE.MeshStandardMaterial({color:0x4b4458,roughness:.95}), cream:()=>new THREE.MeshStandardMaterial({color:0xf1e5cc,roughness:.8}),
   olive:()=>new THREE.MeshStandardMaterial({color:0x4a5038,roughness:.7}), purple:()=>new THREE.MeshStandardMaterial({color:0x4a2a60,roughness:.6}),
-  glass:()=>new THREE.MeshStandardMaterial({color:0x9fb8d8,metalness:.9,roughness:.06,emissive:0x1d2a3b}),
   col:(c,e=0)=>new THREE.MeshStandardMaterial({color:c,roughness:.5,emissive:e?c:0,emissiveIntensity:e}), glow:c=>new THREE.MeshBasicMaterial({color:c}),
   tex:t=>new THREE.MeshStandardMaterial({map:t,roughness:.9}) };
 function mesh(geo,mat,x=0,y=0,z=0){ const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); return m; }
@@ -655,45 +550,6 @@ const MODELS={
   panel(){ const g=new THREE.Group(); g.add(box(.28,.2,.06,M.steel())); const scr=mesh(new THREE.PlaneGeometry(.16,.09),M.glow(0x1d3b37),-.03,.03,.031); g.add(scr); g.userData.flicker=scr;
     [0xe2483d,0x3f8cf0,0xf2c94c,0xe46bb4].forEach((c,i)=>g.add(wireTube([[.09,.06-i*.04,.03],[.16,.04-i*.04,.06],[.12,-.12-i*.02,.05]],c,.005))); g.userData.sway=true; return g; },
   lockbox(){ const g=new THREE.Group(); g.add(box(.26,.14,.18,M.wood())); g.add(box(.27,.03,.19,M.brass(),0,.07,0)); g.add(box(.06,.07,.02,M.brass(),0,.02,.1)); g.userData.sway=true; return g; },
-  gclock(){ const g=new THREE.Group(); const w=M.darkwood();
-    g.add(box(.5,1.9,.3,w,0,0,0)); g.add(box(.56,.1,.34,w,0,.98,0)); g.add(box(.56,.08,.34,w,0,-.95,0));
-    const face=mesh(new THREE.CircleGeometry(.19,40),M.cream(),0,.6,.152); g.add(face); g.add(mesh(new THREE.TorusGeometry(.19,.015,8,40),M.brass(),0,.6,.153));
-    for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; const t=box(.008,.03,.004,M.dark()); t.position.set(Math.sin(a)*.16,.6+Math.cos(a)*.16,.155); t.rotation.z=-a; g.add(t); }
-    const hh=new THREE.Group(); hh.position.set(0,.6,.158); hh.add(box(.012,.1,.004,M.dark(),0,.05,0)); g.add(hh);
-    const mh=new THREE.Group(); mh.position.set(0,.6,.16); mh.add(box(.008,.15,.004,M.dark(),0,.075,0)); g.add(mh);
-    g.add(box(.36,.9,.01,M.col(0x1a120e),0,-.2,.151));
-    const pend=new THREE.Group(); pend.position.set(0,.22,.16); pend.add(box(.012,.6,.01,M.brass(),0,-.3,0)); pend.add(mesh(new THREE.CylinderGeometry(.07,.07,.015,24),M.brass(),0,-.62,0)); pend.children[1].rotation.x=Math.PI/2; g.add(pend);
-    g.userData.anim=(dt,t)=>{ pend.rotation.z=Math.sin(t*2.6)*.25; mh.rotation.z=-t*2; hh.rotation.z=-t*.4; }; return g; },
-  spellbook(){ const g=new THREE.Group(); const w=M.darkwood();
-    g.add(box(.08,.6,.08,w,0,-.3,0)); g.add(box(.4,.04,.4,w,0,-.6,0));
-    const top=new THREE.Group(); top.rotation.x=-.5; g.add(top); top.add(box(.46,.03,.32,w));
-    top.add(box(.2,.025,.28,M.col(0x5a1e2c),-.1,.025,0)); top.add(box(.2,.025,.28,M.col(0x5a1e2c),.1,.025,0));
-    const pl=box(.19,.012,.26,M.cream(),-.1,.045,0); pl.rotation.z=.08; top.add(pl); const pr=box(.19,.012,.26,M.cream(),.1,.045,0); pr.rotation.z=-.08; top.add(pr);
-    for(let i=0;i<5;i++){ top.add(box(.13,.002,.008,M.dark(),-.1,.053,-.08+i*.04)); top.add(box(.13,.002,.008,M.dark(),.1,.053,-.08+i*.04)); }
-    const flip=box(.18,.006,.26,M.cream(),.09,.06,0); const fp=new THREE.Group(); fp.add(flip); top.add(fp);
-    const glow=new THREE.PointLight(0x9a7cff,.6,1); glow.position.set(0,.2,0); top.add(glow);
-    g.userData.anim=(dt,t)=>{ fp.rotation.z=Math.max(0,Math.sin(t*1.3))*2.6; glow.intensity=.4+Math.sin(t*3)*.2; }; return g; },
-  standMirror(){ const g=new THREE.Group(); const frame=new THREE.Mesh(new THREE.TorusGeometry(.32,.03,12,48),M.brass()); frame.scale.y=1.6; frame.position.y=.35; g.add(frame);
-    const glass=new THREE.Mesh(new THREE.CircleGeometry(.31,48),M.glass()); glass.scale.y=1.6; glass.position.set(0,.35,-.005); g.add(glass);
-    for(const [x,y,a,l] of [[-.05,.45,.6,.3],[.06,.3,-.4,.28],[0,.5,-1.2,.2],[-.08,.2,1.1,.2]]){ const c=box(.006,l,.004,M.glow(0xffffff),x,y,.01); c.rotation.z=a; g.add(c); }
-    g.add(box(.05,.5,.05,M.darkwood(),-.24,-.62,0)); g.add(box(.05,.5,.05,M.darkwood(),.24,-.62,0)); g.add(box(.6,.04,.25,M.darkwood(),0,-.88,0));
-    return g; },
-  cauldron(){ const g=new THREE.Group(); const pot=new THREE.Mesh(new THREE.SphereGeometry(.3,24,18,0,Math.PI*2,Math.PI*.28,Math.PI*.72),new THREE.MeshStandardMaterial({color:0x1d1b22,metalness:.5,roughness:.5,side:THREE.DoubleSide})); pot.position.y=0; g.add(pot);
-    g.add(mesh(new THREE.TorusGeometry(.25,.03,10,32),M.iron(),0,.19,0)); g.children[1].rotation.x=Math.PI/2;
-    const brew=mesh(new THREE.CircleGeometry(.24,32),M.glow(0x5dff8a),0,.17,0); brew.rotation.x=-Math.PI/2; g.add(brew);
-    for(let i=0;i<3;i++){ const a=i/3*Math.PI*2; g.add(box(.04,.18,.04,M.iron(),Math.sin(a)*.2,-.28,Math.cos(a)*.2)); }
-    const bub=[]; for(let i=0;i<6;i++){ const b=mesh(new THREE.SphereGeometry(.025,8,6),new THREE.MeshBasicMaterial({color:0x8fffb0,transparent:true,opacity:.8})); b.userData.ph=Math.random()*3; b.userData.x=(Math.random()-.5)*.3; b.userData.z=(Math.random()-.5)*.3; g.add(b); bub.push(b); }
-    const lt=new THREE.PointLight(0x5dff8a,.8,1.4); lt.position.y=.4; g.add(lt);
-    g.userData.anim=(dt,t)=>{ bub.forEach(b=>{ const k=((t*.6+b.userData.ph)%1); b.position.set(b.userData.x,.18+k*.35,b.userData.z); b.material.opacity=.8*(1-k); b.scale.setScalar(1+k); }); lt.intensity=.6+Math.sin(t*5)*.2; };
-    return g; },
-  lanternProp(){ const g=new THREE.Group(); const blk=M.col(0x1a1414);
-    g.add(box(.16,.02,.16,blk,0,-.13,0)); g.add(box(.16,.02,.16,blk,0,.13,0)); g.add(mesh(new THREE.ConeGeometry(.1,.08,4),blk,0,.18,0)); g.children[2].rotation.y=Math.PI/4;
-    for(const x of [-.075,.075]) for(const z of [-.075,.075]) g.add(box(.012,.26,.012,blk,x,0,z));
-    const glass=box(.14,.24,.14,new THREE.MeshStandardMaterial({color:0x332a20,transparent:true,opacity:.5,emissive:0}),0,0,0); g.add(glass);
-    g.add(mesh(new THREE.TorusGeometry(.05,.008,6,16,Math.PI),blk,0,.24,0));
-    const lt=new THREE.PointLight(0xffc070,0,2); g.add(lt);
-    g.userData.unlock=()=>g.userData.opening=0; g.userData.anim=(dt,t)=>{ if(g.userData.opening!==undefined){ g.userData.opening=Math.min(1,g.userData.opening+dt); glass.material.emissive.setHex(0xffb050); glass.material.emissiveIntensity=g.userData.opening*(1.2+Math.sin(t*14)*.1); glass.material.opacity=.85; lt.intensity=g.userData.opening*2; } };
-    return g; },
   keypad(){ const g=new THREE.Group(); g.add(box(.22,.22,.05,M.dark())); [0xe2483d,0x3fbf6a,0x3f8cf0,0xf2c94c].forEach((c,i)=>g.add(box(.075,.075,.02,M.col(c,.3),(i%2?.045:-.045),(i<2?.045:-.045),.03))); g.userData.sway=true; return g; }
 };
 
@@ -733,14 +589,14 @@ function buildItems(){
   ROOM.stations.forEach((def,i)=>{
     const anchor=new THREE.Group(); const a=THREE.MathUtils.degToRad(def.angle), r=state.radius*def.dist;
     anchor.position.set(Math.sin(a)*r,def.y,-Math.cos(a)*r); anchor.userData.baseY=def.y;
-    const q=new THREE.Sprite(new THREE.SpriteMaterial({map:qTex,transparent:true,depthWrite:false,depthTest:false})); q.renderOrder=50; q.scale.setScalar(.34); anchor.add(q);
+    const q=new THREE.Sprite(new THREE.SpriteMaterial({map:qTex,transparent:true,depthWrite:false})); q.scale.setScalar(.34); anchor.add(q);
     const model=MODELS[def.model](); model.scale.setScalar(.0001); anchor.add(model);
     model.rotation.y=Math.atan2(-anchor.position.x,-anchor.position.z)+(model.userData.yawOffset||0);
     const size=def.model==="door"?2.1:def.model==="cage"?1.4:def.prop?1:.4;
     const ring=new THREE.Mesh(new THREE.RingGeometry(.16,.2,48),new THREE.MeshBasicMaterial({color:0xf08a24,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
     ring.rotation.x=-Math.PI/2; ring.position.y=def.prop?(-1.28-def.y):-.22; ring.scale.setScalar(def.prop?2.4:1); anchor.add(ring);
     const label=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTex(def.name),transparent:true,depthWrite:false,opacity:0})); label.scale.set(.42,.079,1);
-    label.position.y=def.labelY!==undefined?def.labelY:def.model==="door"?1.15:def.model==="cage"?.85:def.model==="table"?.35:def.prop?.68:.3; anchor.add(label);
+    label.position.y=def.model==="door"?1.15:def.model==="cage"?.85:def.model==="table"?.35:def.prop?.68:.3; anchor.add(label);
     if(def.type==="scare") label.visible=false;
     anchor.visible=false; scene.add(anchor);
     items.push({def,i,anchor,q,model,ring,label,mix:def.always?1:0,target:def.always?1:0,seen:!!def.always,qTex,cTex,ringBase:def.prop?2.4:1});
@@ -748,28 +604,23 @@ function buildItems(){
   const sc=ROOM.stations.find(s=>s.type==="scare");
   if(sc){ monster=new THREE.Mesh(new THREE.PlaneGeometry(.8,1),new THREE.MeshBasicMaterial({map:ghostTex(sc.word),transparent:true,depthTest:false,depthWrite:false})); monster.renderOrder=999; monster.visible=false; scene.add(monster); }
   const bomb=items.find(it=>it.def.type==="bomb"); if(bomb) drawBombScreen(bomb.model.userData.screen,state.remaining,"live");
-  noCull();
   if(ROOM.decor) buildDecor(); else if(decor){ scene.remove(decor); decor=null; }
   // restore opened props when resuming
   items.forEach(it=>{ if(state.solved.includes(it.i)&&it.model.userData.unlock&&it.def.model!=="door"){ it.model.userData.unlock(); it.model.userData.opening=1; } });
 }
 const isSolved=it=>state.solved.includes(it.i);
 
-function noCull(){ scene.traverse(o=>{ o.frustumCulled=false; }); }
-
 /* ---------- particles ---------- */
 function burst(pos,color=0xf08a24,n=46,speed=1){ const geo=new THREE.BufferGeometry(); const p=new Float32Array(n*3); const v=[];
   for(let i=0;i<n;i++){ p[i*3]=pos.x;p[i*3+1]=pos.y;p[i*3+2]=pos.z; v.push(new THREE.Vector3(Math.random()-.5,Math.random()-.2,Math.random()-.5).normalize().multiplyScalar((.4+Math.random()*.7)*speed)); }
   geo.setAttribute("position",new THREE.BufferAttribute(p,3)); const pts=new THREE.Points(geo,new THREE.PointsMaterial({color,size:.025*Math.max(1,speed*.7),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
-  pts.frustumCulled=false; scene.add(pts); particles.push({pts,v,life:1}); }
+  scene.add(pts); particles.push({pts,v,life:1}); }
 const easeOutBack=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)}; const clamp01=t=>Math.max(0,Math.min(1,t));
 
 /* ---------- preview controls ---------- */
 const look={yaw:0,pitch:0},move={x:0,y:0},keys={};
 function setupPreviewControls(){ const el=renderer.domElement; let drag=null;
-  el.addEventListener("pointerdown",e=>{ if(state.mode==="cam"&&!state.manualLook){ nudge={x:e.clientX}; el.setPointerCapture(e.pointerId); return; } if(state.mode!=="preview"&&!state.manualLook)return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
-  let nudge=null; el.addEventListener("pointermove",e=>{ if(!nudge)return; cam2.nudge=(cam2.nudge||0)+(e.clientX-nudge.x)*.006; nudge={x:e.clientX}; });
-  el.addEventListener("pointerup",()=>nudge=null);
+  el.addEventListener("pointerdown",e=>{ if(state.mode!=="preview")return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
   el.addEventListener("pointermove",e=>{ if(!drag)return; look.yaw-=(e.clientX-drag.x)*.005; look.pitch=Math.max(-1.3,Math.min(1.3,look.pitch-(e.clientY-drag.y)*.005)); drag={x:e.clientX,y:e.clientY}; });
   el.addEventListener("pointerup",()=>drag=null);
   addEventListener("keydown",e=>{ if(!state.panelOpen) keys[e.key.toLowerCase()]=true; }); addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
@@ -782,124 +633,60 @@ function setupPreviewControls(){ const el=renderer.domElement; let drag=null;
 const cam2={q:new THREE.Quaternion(),off:null,target:new THREE.Vector3(),ori:null,steps:0};
 const _e=new THREE.Euler(),_q0=new THREE.Quaternion(),_q1=new THREE.Quaternion(-Math.sqrt(.5),0,0,Math.sqrt(.5)),_z=new THREE.Vector3(0,0,1),_y=new THREE.Vector3(0,1,0);
 function oriToQuat(a,b,g,o,q){ _e.set(b,a,-g,"YXZ"); q.setFromEuler(_e); q.multiply(_q1); q.multiply(_q0.setFromAxisAngle(_z,-o)); }
-let camStream=null, motionReady=false;
-async function getCamera(){ const tries=[{video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false},{video:{facingMode:"environment"},audio:false},{video:true,audio:false}];
-  let last; for(const c of tries){ try{ return await navigator.mediaDevices.getUserMedia(c); }catch(e){ last=e; if(e.name==="NotAllowedError") break; } }
-  await new Promise(r=>setTimeout(r,700)); try{ return await navigator.mediaDevices.getUserMedia(tries[1]); }catch(e){ throw last||e; } }
-function camError(err,resume){ const n=$("#arNote"); n.className="note warn";
-  n.innerHTML=(err&&err.name==="NotAllowedError")
-    ?`Chrome blocked the camera for this page. Tap the icon left of the web address, then <b>Permissions</b> (or Site settings), set <b>Camera</b> to Allow, and tap Try again.`
-    :`The camera didn't open (${err&&err.name||"unknown error"}). Close other apps using the camera and tap Try again.`;
-  const b=document.createElement("button"); b.className="btn primary"; b.style.marginTop="10px"; b.style.width="100%"; b.textContent="Try again"; b.onclick=()=>startCamMode(resume); n.appendChild(b); }
-function startMotion(){ if(motionReady) return; motionReady=true;
-  // 1) Chrome's Generic Sensor API: a ready-made orientation quaternion, most reliable on Android
-  try{ if("RelativeOrientationSensor" in window){ const sen=new RelativeOrientationSensor({frequency:60,referenceFrame:"screen"});
-      sen.addEventListener("reading",()=>{ if(sen.quaternion){ cam2.sq=sen.quaternion; cam2.sensorAt=performance.now(); DBG.n.sensor=(DBG.n.sensor||0)+1; } }); sen.addEventListener("error",ev=>{ DBG.sensorErr=(ev.error&&ev.error.name)||"error"; }); sen.start(); } else DBG.sensorErr="api missing"; }catch(e){ DBG.sensorErr="threw "+e.name; }
-  // 2) classic orientation events (relative or absolute)
-  const mk=kind=>e=>{ DBG.n[kind]=(DBG.n[kind]||0)+1; DBG[kind]=[e.alpha,e.beta,e.gamma].map(v=>v==null?"null":Math.round(v)).join(" / ");
-    if(e.alpha==null||e.beta==null) return; cam2[kind]={alpha:e.alpha,beta:e.beta,gamma:e.gamma||0}; cam2[kind+"At"]=performance.now(); };
-  addEventListener("deviceorientation",mk("rel")); addEventListener("deviceorientationabsolute",mk("abs"));
-  try{ if("Gyroscope" in window){ const gy=new Gyroscope({frequency:10}); gy.addEventListener("reading",()=>{ DBG.gyro="yes"; gy.stop(); }); gy.addEventListener("error",ev=>{ DBG.gyro="no ("+(ev.error&&ev.error.name)+")"; }); gy.start(); } else DBG.gyro="api missing"; }catch(e){ DBG.gyro="error "+e.name; }
-  // step detection
-  let lp=9.8,above=false,last=0;
-  addEventListener("devicemotion",e=>{ const a=e.accelerationIncludingGravity; if(!a||a.x==null)return; const m=Math.hypot(a.x,a.y,a.z); lp=lp*.75+m*.25; const now=performance.now();
-    if(e.rotationRate&&e.rotationRate.alpha!=null) DBG.rot="yes"; else DBG.rot=DBG.rot||"none";
-    if(!above&&lp>11&&now-last>330){ above=true; last=now; DBG.steps=(DBG.steps||0)+1; stepForward(); } else if(above&&lp<10.2) above=false; });
-}
-function stepForward(){ if(state.mode!=="cam"||state.panelOpen||state.done) return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); f.y=0; if(f.lengthSq()<.01) return; f.normalize();
-  const nx=cam2.target.clone().addScaledVector(f,.5); const blocked=items.some(it=>it.anchor.visible&&Math.hypot(nx.x-it.anchor.position.x,nx.z-it.anchor.position.z)<(it.def.prop?.75:.5));
-  if(!blocked) cam2.target.copy(nx); cam2.steps++; }
 async function startCamMode(resume){
   const v=$("#camfeed");
-  try{ if(!camStream) camStream=await getCamera(); v.srcObject=camStream; v.hidden=false; await v.play().catch(()=>{}); }
-  catch(err){ return camError(err,resume); }
+  try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false}); v.srcObject=stream; v.hidden=false; await v.play().catch(()=>{}); }
+  catch(err){ $("#arNote").className="note warn"; $("#arNote").textContent="The camera didn't open ("+(err&&err.name||"blocked")+"). Allow camera access for this page, and open it from a web link (https) rather than a downloaded file."; return; }
   try{ if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); }catch(e){}
   try{ if(typeof DeviceMotionEvent!=="undefined"&&DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); }catch(e){}
-  try{ if(navigator.permissions) await Promise.all(["accelerometer","gyroscope"].map(n=>navigator.permissions.query({name:n}).catch(()=>null))); }catch(e){}
-  startMotion();
+  addEventListener("deviceorientation",e=>{ if(e.alpha==null)return; cam2.ori=e; });
+  let lp=9.8,above=false,last=0;
+  addEventListener("devicemotion",e=>{ const a=e.accelerationIncludingGravity; if(!a||a.x==null)return; const m=Math.hypot(a.x,a.y,a.z); lp=lp*.75+m*.25; const now=performance.now();
+    if(!above&&lp>11&&now-last>330){ above=true; last=now; if(state.mode==="cam"&&!state.panelOpen&&!state.done){ const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); f.y=0; if(f.lengthSq()>.01){ f.normalize(); const nx=cam2.target.clone().addScaledVector(f,.5);
+        const blocked=items.some(it=>it.anchor.visible&&Math.hypot(nx.x-it.anchor.position.x,nx.z-it.anchor.position.z)<(it.def.prop?.75:.5));
+        if(!blocked){ cam2.target.copy(nx); } cam2.steps++; } } }
+    else if(above&&lp<10.2) above=false; });
   camera.position.set(0,0,0); cam2.target.set(0,0,0); cam2.off=null;
   begin("cam",resume);
-  // no motion data at all → drag to look + on-screen stick, over the live camera
-  setTimeout(()=>{ if(!cam2.src&&state.mode==="cam"){ state.manualLook=true; look.yaw=0; look.pitch=0; $("#stick").hidden=false; document.body.classList.add("preview");
-      toast("Your phone isn't sharing motion data, so drag the screen to turn and use the stick to walk.",7000); } },2500);
+  setTimeout(()=>{ if(!cam2.ori) toast("Your phone isn't sending motion data, so turning won't move the view. Try the page in Chrome from a web link.",6000); },2500);
 }
 function updateCamMode(dt){
-  if(state.manualLook){ cam2.src="touch"; return; }
-  const now=performance.now(); let got=false, k=1;
-  if(cam2.sq&&now-(cam2.sensorAt||0)<400){ cam2.q.fromArray(cam2.sq); cam2.q.premultiply(_qR); cam2.src="sensor"; got=true; }
-  else { const o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
-    const use=cam2.rel&&now-(cam2.relAt||0)<400?"rel":cam2.abs&&now-(cam2.absAt||0)<400?"abs":null;
-    if(use){ const e=cam2[use]; oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q); cam2.src=use==="rel"?"gyro events":"compass only"; got=true; k=use==="rel"?.6:.12; } }
-  if(got){ if(!cam2.off){ _e.setFromQuaternion(cam2.q,"YXZ"); cam2.off=new THREE.Quaternion().setFromAxisAngle(_y,-_e.y); }
-    const tgt=new THREE.Quaternion().setFromAxisAngle(_y,cam2.nudge||0).multiply(cam2.off).multiply(cam2.q);
-    if(!cam2.started){ camera.quaternion.copy(tgt); cam2.started=true; } else camera.quaternion.slerp(tgt,Math.min(1,k*dt*60));
-    if(cam2.src==="compass only"&&!cam2.warned){ cam2.warned=true; setTimeout(()=>toast("Your phone has no gyroscope, so turning uses the compass and can wobble. Drag the screen to line things up, or turn on Touch controls in the menu.",8000),1500); } }
+  const e=cam2.ori; if(e){ const o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
+    oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q);
+    if(!cam2.off){ _e.setFromQuaternion(cam2.q,"YXZ"); cam2.off=new THREE.Quaternion().setFromAxisAngle(_y,-_e.y); }
+    camera.quaternion.copy(cam2.off).multiply(cam2.q); }
   camera.position.lerp(cam2.target,Math.min(1,dt*4));
 }
-const _qR=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2); // sensor world (Z up) → scene (Y up)
-
-function setManual(on){ state.manualLook=on; $("#stick").hidden=!on; document.body.classList.toggle("preview",on);
-  if(on){ _e.setFromQuaternion(camera.quaternion,"YXZ"); look.yaw=_e.y; look.pitch=0; toast("Touch controls on. Drag to turn, use the stick to walk.",4000); }
-  else { cam2.off=null; cam2.started=false; cam2.nudge=0; toast("Motion sensors on. Turn your body to look around.",4000); } }
-
-/* ---------- diagnostics: add &debug=1 to the link ---------- */
-const DBG={n:{}}; let dbgOn=false;
-function startDebug(){ if(dbgOn)return; dbgOn=true; const d=document.createElement("pre"); d.id="dbg"; d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:50;margin:0;padding:8px 10px;background:rgba(0,0,0,.78);color:#8ff0c8;font:11px/1.35 ui-monospace,monospace;border-radius:8px;pointer-events:none;white-space:pre-wrap;max-height:42%;overflow:hidden";
-  $("#overlay").appendChild(d); const rate={}, prev={};
-  setInterval(()=>{ for(const k in DBG.n){ rate[k]=DBG.n[k]-(prev[k]||0); prev[k]=DBG.n[k]; } },1000);
-  setInterval(()=>{ if(!camera)return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); const yaw=Math.round(THREE.MathUtils.radToDeg(Math.atan2(-f.x,-f.z)));
-    const vis=items.filter(it=>it.anchor.visible).length; const near=items.filter(it=>it.anchor.visible).map(it=>`${it.def.name.slice(0,10)}@${it.def.angle}° ${it.d?it.d.toFixed(1):"?"}m`).join(", ");
-    d.textContent=`mode=${state.mode} xrOK=${typeof xrOK!=="undefined"&&xrOK} manual=${!!state.manualLook}
-source=${cam2.src||"none"}  gyro=${DBG.gyro||"?"}  rotationRate=${DBG.rot||"?"}
-sensor: ${rate.sensor||0}/s err=${DBG.sensorErr||"-"}
-rel event: ${rate.rel||0}/s  [${DBG.rel||"-"}]
-abs event: ${rate.abs||0}/s  [${DBG.abs||"-"}]
-view yaw=${yaw}°  pitch=${Math.round(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1,Math.min(1,f.y)))))}°  nudge=${Math.round(THREE.MathUtils.radToDeg(cam2.nudge||0))}°  steps=${DBG.steps||0}
-pos=${camera.position.x.toFixed(2)},${camera.position.z.toFixed(2)}  visible items=${vis}  draw calls=${renderer.info.render.calls}  xr=${renderer.xr.isPresenting}
-${items.filter(it=>it.anchor.visible&&it.def.type!=="bomb").map(it=>{ const v=it.anchor.position.clone().project(renderer.xr.isPresenting?renderer.xr.getCamera(camera).cameras[0]:camera); return `${it.def.id}: d=${(it.d||0).toFixed(2)} mix=${it.mix.toFixed(2)} q=${it.q.scale.x.toFixed(2)} m=${it.model.scale.x.toFixed(2)} scr=${v.x.toFixed(1)},${v.y.toFixed(1)},${v.z.toFixed(2)}`; }).join("\n")}`; },250); }
-if(new URLSearchParams(location.search).get("debug")==="1") startDebug();
 
 /* ---------- jump scare (kid-friendly ghost) ---------- */
 const camQ=new THREE.Quaternion(),camS=new THREE.Vector3(),fwd=new THREE.Vector3(),upv=new THREE.Vector3(),rightv=new THREE.Vector3();
 let scareT=-1;
-// timeline: 0-.5 silence · .5-1.55 ghost hangs far away, heartbeat · 1.55-1.77 lunge · 1.77-2.15 in your face · gone
-const SC={appear:.5,lunge:1.55,hit:1.77,gone:2.15};
-function startScare(it){ state.scaring=true; scareT=0; it.q.visible=false;
-  setTimeout(()=>sfx.heartbeat(),SC.appear*1000);
-  setTimeout(()=>{ sfx.scream(); },(SC.lunge+.06)*1000);
-  setTimeout(()=>{ $("#flash").className=""; void $("#flash").offsetWidth; $("#flash").className="scare"; $("#overlay").classList.add("shake"); if(navigator.vibrate)navigator.vibrate([250,60,180,60,120]); },SC.hit*1000);
-  setTimeout(()=>{ const w=$("#whisper"); w.textContent=it.def.word; w.className=""; void w.offsetWidth; w.className="on"; },(SC.gone+.05)*1000);
-  setTimeout(()=>{ $("#overlay").classList.remove("shake"); state.scaring=false; state.solved.push(it.i); state.step++; persist(); renderBag(); toast(it.def.after,5000); objective(); },(SC.gone+1.4)*1000);
+function startScare(it){ state.scaring=true; scareT=0; sfx.giggle(); setTimeout(()=>sfx.boo(),450); it.q.visible=false;
+  setTimeout(()=>{ $("#flash").className=""; void $("#flash").offsetWidth; $("#flash").className="scare"; $("#overlay").classList.add("shake"); if(navigator.vibrate)navigator.vibrate([80,40,160]); },1250);
+  setTimeout(()=>{ const w=$("#whisper"); w.textContent=it.def.word; w.className=""; void w.offsetWidth; w.className="on"; },1380);
+  setTimeout(()=>{ $("#overlay").classList.remove("shake"); state.scaring=false; state.solved.push(it.i); state.step++; persist(); toast(it.def.after,5000); objective(); },2700);
 }
 function updateScare(dt,cam,t){ if(scareT<0||!monster)return; scareT+=dt;
   cam.matrixWorld.decompose(camPos,camQ,camS); fwd.set(0,0,-1).applyQuaternion(camQ); upv.set(0,1,0).applyQuaternion(camQ); rightv.set(1,0,0).applyQuaternion(camQ);
-  let d, jx=0, jy=0, rz=0;
-  if(scareT<SC.appear){ monster.visible=false; return; }
-  if(scareT<SC.lunge){ d=4.5; monster.visible=Math.random()>.08; rz=Math.sin(t*2)*.04; }
-  else if(scareT<SC.hit){ const k=(scareT-SC.lunge)/(SC.hit-SC.lunge); d=4.5-3.9*Math.pow(k,3); monster.visible=true; }
-  else if(scareT<SC.gone){ d=.6; monster.visible=true; jx=(Math.random()-.5)*.03; jy=(Math.random()-.5)*.03; rz=(Math.random()-.5)*.12; }
-  else { monster.visible=false; scareT=-1; return; }
-  monster.position.copy(camPos).addScaledVector(fwd,d).addScaledVector(rightv,jx).addScaledVector(upv,-.04+jy);
-  monster.quaternion.copy(camQ); monster.rotation.z+=rz;
-}
+  const T=1.35; const k=clamp01(scareT/T), d=4.2-3.95*Math.pow(k,2.4);
+  monster.visible=scareT<T+.15;
+  monster.position.copy(camPos).addScaledVector(fwd,d).addScaledVector(rightv,Math.sin(scareT*5)*.5*(1-k)).addScaledVector(upv,-.05+Math.sin(scareT*8)*.08*(1-k));
+  monster.quaternion.copy(camQ); monster.rotation.z+=Math.sin(t*9)*.12;
+  if(scareT>T+.2){ monster.visible=false; scareT=-1; } }
 
 /* ---------- main loop ---------- */
 let lastSave=0,lastSec=-1;
-let trackLost=false;
-function loop(time,frame){
-  if(frame&&renderer.xr.isPresenting){ try{ const pose=frame.getViewerPose(renderer.xr.getReferenceSpace()); const lost=!pose||pose.emulatedPosition;
-      if(lost!==trackLost){ trackLost=lost; $("#tracklost").hidden=!lost; } }catch(e){} }
+function loop(time){
   const dt=Math.min(clock.getDelta(),.1),t=time/1000;
   if(!ROOM){ renderer.render(scene,camera); return; }
   if(state.running&&!state.done){
     state.elapsed+=dt;
     if(ROOM.timer.mode==="down"){ state.remaining-=dt; const s=Math.ceil(state.remaining);
       if(s!==lastSec){ lastSec=s; const bomb=items.find(it=>it.def.type==="bomb"); if(bomb)drawBombScreen(bomb.model.userData.screen,s,"live"); sfx.tick(s<=30); document.body.classList.toggle("urgent",s<=60); }
-      if(state.remaining<=0) explode();
-      if(ROOM.id==="bomb"&&!state.halfHint&&state.elapsed>=ROOM.timer.seconds/2) halfHint(); }
+      if(state.remaining<=0) explode(); }
     ambientStep(dt);
   }
-  if(state.mode==="preview"||state.manualLook){ const fx=(keys.d?1:0)-(keys.a?1:0)+move.x, fz=(keys.s?1:0)-(keys.w?1:0)+move.y;
+  if(state.mode==="preview"){ const fx=(keys.d?1:0)-(keys.a?1:0)+move.x, fz=(keys.s?1:0)-(keys.w?1:0)+move.y;
     if(keys.arrowleft)look.yaw+=dt*1.6; if(keys.arrowright)look.yaw-=dt*1.6; const sp=1.3*dt,cy=Math.cos(look.yaw),sy=Math.sin(look.yaw);
     if(!state.panelOpen){ camera.position.x+=(fx*cy+fz*sy)*sp; camera.position.z+=(-fx*sy+fz*cy)*sp; } camera.rotation.set(look.pitch,look.yaw,0,"YXZ"); }
   if(state.mode==="cam") updateCamMode(dt);
@@ -935,10 +722,7 @@ function loop(time,frame){
     if(interactive) cands.push(it);
   }
   const cur=ROOM.sequential?items[state.step]:null;
-  // prefer what you're facing: distance plus a penalty for how far off-centre it is
-  const vdir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.getWorldQuaternion?cam.getWorldQuaternion(new THREE.Quaternion()):camera.quaternion); vdir.y=0; vdir.normalize();
-  const score=it=>{ const dx=it.anchor.position.x-camPos.x, dz=it.anchor.position.z-camPos.z, L=Math.hypot(dx,dz)||1; const off=Math.acos(Math.max(-1,Math.min(1,(dx*vdir.x+dz*vdir.z)/L))); return it.d+off*1.5; };
-  const near=cands.filter(it=>it.def.always?it.d<reveal*1.15:it.mix>.6).sort((a,b)=>score(a)-score(b))[0]||null;
+  const near=cands.filter(it=>it.def.always?it.d<reveal*1.15:it.mix>.6).sort((a,b)=>a.d-b.d)[0]||null;
   let guideTo=cur||null;
   if(!ROOM.sequential){ const puzzles=cands.filter(it=>it.def.type!=="bomb").sort((a,b)=>a.d-b.d); guideTo=puzzles[0]||cands.find(it=>it.def.type==="bomb")||null; }
   updateScare(dt,cam,t); animateDecor(dt,t);
@@ -952,30 +736,25 @@ function loop(time,frame){
 
 /* ---------- HUD ---------- */
 function fmt(s){ s=Math.max(0,Math.floor(s)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
-function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=ROOM.hard?state.solved.length+"/"+n:Math.min(state.step+1,n)+"/"+n; $("#progLbl").textContent=ROOM.hard?"Solved":"Clue"; }
+function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=Math.min(state.step+1,n)+"/"+n; }
 function renderNotes(){ $("#notesCount").textContent=state.notes.length+"/"+ROOM.stations.filter(s=>s.info).length; }
 function objective(){ const o=$("#objective"); let h="";
   if(!state.done){ if(ROOM.id==="bomb") h=state.notes.length<1?`Search the room for <b>?</b> clues. Then cut the right wire.`:`Keep searching, or go back to <b>the bomb</b> and cut a wire.`;
-    else h=ROOM.hard?`Hard mode · <b>${ROOM.stations.length-state.solved.length}</b> left. Solve everything to escape.`:`Follow the <b>?</b> and walk up to it.`; }
+    else h=`Follow the <b>?</b> and walk up to it.`; }
   o.innerHTML=h; o.hidden=!h; if(ROOM.id==="house") renderProg(); }
 let examTarget=null;
-let guideSide=0;
 function updateHud(near,tgt,cam){
   if(!state.running)return;
   $("#timer").textContent=fmt(ROOM.timer.mode==="down"?Math.ceil(state.remaining):state.elapsed);
   const ex=$("#examine"),guide=$("#guide"),dist=$("#dist");
   examTarget=near; ex.hidden=!(near&&!state.panelOpen&&!state.done&&!state.scaring);
-  if(near){ const ty=near.def.type; ex.textContent=ty==="bomb"?"Defuse the bomb":near.def.model==="door"?"Unlock the door":near.def.model==="cage"?"Help Barnaby":near.def.id==="lantern"?"Pick up the lantern":"Examine the "+near.def.name.toLowerCase(); ex.classList.toggle("isBomb",ty==="bomb"); }
-  if(!tgt||ROOM.hard||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
+  if(near){ const ty=near.def.type; ex.textContent=ty==="bomb"?"Defuse the bomb":near.def.model==="door"?"Unlock the door":near.def.model==="cage"?"Help Barnaby":"Examine the "+near.def.name.toLowerCase(); ex.classList.toggle("isBomb",ty==="bomb"); }
+  if(!tgt||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
   const view=cam.cameras&&cam.cameras.length?cam.cameras[0]:cam;
   const local=tgt.anchor.position.clone().applyMatrix4(new THREE.Matrix4().copy(cam.matrixWorld).invert());
   const ndc=tgt.anchor.position.clone().project(view); const onScreen=local.z<0&&Math.abs(ndc.x)<.85&&Math.abs(ndc.y)<.8; const W=innerWidth,H=innerHeight;
   if(onScreen){ guide.hidden=true; if(tgt.mix<.5){ dist.hidden=false; dist.style.left=((ndc.x+1)/2*W)+"px"; dist.style.top=((1-ndc.y)/2*H+Math.min(70,H*.09))+"px"; dist.textContent=tgt.d.toFixed(1)+" m"; } else dist.hidden=true; }
-  else { dist.hidden=true; guide.hidden=false; let th=Math.atan2(local.y,local.x); const rx=W/2-40,ry=H/2-90;
-    if(local.z>0){ // behind you: pick a side and stick with it until it's clearly the other way
-      if(Math.abs(local.x)>Math.abs(local.z)*.35||guideSide===0) guideSide=local.x>=0?1:-1;
-      th=guideSide>0?0:Math.PI; }
-    else guideSide=local.x>=0?1:-1; const k=Math.min(Math.abs(rx/Math.cos(th)),Math.abs(ry/Math.sin(th)));
+  else { dist.hidden=true; guide.hidden=false; const th=Math.atan2(local.y,local.x),rx=W/2-40,ry=H/2-90; const k=Math.min(Math.abs(rx/Math.cos(th)),Math.abs(ry/Math.sin(th)));
     guide.style.transform=`translate(${W/2+Math.cos(th)*k}px,${H/2-Math.sin(th)*k}px) rotate(${-th}rad)`; }
 }
 let toastT; function toast(msg,ms=3200){ const t=$("#toast"); t.innerHTML=msg; t.hidden=false; t.style.opacity=1; clearTimeout(toastT); toastT=setTimeout(()=>{t.style.opacity=0;setTimeout(()=>t.hidden=true,300)},ms); }
@@ -987,7 +766,7 @@ function closePanel(){ clearTimeout(hintTimer); if(!state.panelOpen)return; stat
 $("#panel").addEventListener("click",e=>{ if(e.target.id==="panel")closePanel(); });
 function wrongFx(el){ sfx.wrong(); if(navigator.vibrate)navigator.vibrate([40,40,40]); el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
 
-const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse code",riddle:"Riddle",number:"Number lock",wires:"Repair task",simon:"Pattern task",backwards:"Backwards writing",capitals:"Hidden message",rail:"Zigzag code",pick:"Potion"};
+const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse code",riddle:"Riddle",number:"Number lock",wires:"Repair task",simon:"Pattern task",backwards:"Backwards writing",capitals:"Hidden message",rail:"Zigzag code"};
 function hintsFor(d){
   if(d.hints) return d.hints;
   if(d.type==="shift") return [`Each letter moved ${d.shift} step forward. Move each one back ${d.shift}: B becomes A, C becomes B.`,"Top row is what you see, bottom row is what it means:"+alphaTable(A,[...A].map((c,i)=>A[(i-d.shift+26)%26]).join(""))];
@@ -998,11 +777,11 @@ function hintsFor(d){
   if(d.type==="simon") return ["Tap Watch, then tap the gems in the same order. It gets one longer each round."];
   return [];
 }
-function displayFor(d){ const H=ROOM.hard;
-  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}${H?"":"<small>A→B · B→C · C→D …</small>"}</div>`;
-  if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div>${H?"":`<div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`}`;
-  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}${H?"":`<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div>`}</div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
-  if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${d.newsBody}</div>`;
+function displayFor(d){
+  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}<small>A→B · B→C · C→D …</small></div>`;
+  if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div><div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`;
+  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div></div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
+  if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${NEWS_BODY}</div>`;
   if(d.type==="rail"){ const [t,b]=railRows(d.answer); return `<div class="rail"><div><span>TOP</span>${t}</div><div><span>BOTTOM</span>${b}</div></div>`; }
   if(d.display) return `<div class="cipher type">${d.display}</div>`;
   return "";
@@ -1022,17 +801,13 @@ function letterEntry(body,d,onCheck){
 function openStation(it){
   const d=it.def;
   if(d.type==="bomb") return openBomb(it);
-  if(d.requires){ const need=d.requires==="all"?items.filter(x=>x!==it).map(x=>x.i):d.requires.map(id=>items.find(x=>x.def.id===id).i);
-    const left=need.filter(i=>!state.solved.includes(i)).length;
-    if(left) return openPanel(`<div class="eyebrow">Locked</div><h2>${d.name}</h2><p>${d.lockedMsg||"It won't budge yet."}</p>${d.requires==="all"?`<p><em>${left} thing${left>1?"s":""} left to find in the house.</em></p>`:""}<div class="row"><button class="btn primary" id="ok">Step back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); }
-  const H=ROOM.hard; const hints=H?[]:hintsFor(d); let hl=0;
+  const hints=hintsFor(d); let hl=0;
   const typed=["shift","atbash","morse","riddle","number","backwards","capitals","rail"].includes(d.type);
   let mid=displayFor(d);
-  if(typed) mid+=`${d.ask&&!H?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
-  if(d.type==="pick") mid+=`${H?"":`<div class="cipher type">${d.recipe}</div>`}<div class="answer" id="pans"></div><div class="itemgrid" id="pgrid"></div>`;
+  if(typed) mid+=`${d.ask?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
-  openPanel(`<div class="eyebrow">${H?(ROOM.id==="house"?"Hard mode":"&nbsp;"):TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2>${(H?d.hardLead:d.lead)?`<p>${H?d.hardLead:d.lead}</p>`:""}${mid}<div id="hint"></div>
+  openPanel(`<div class="eyebrow">${TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
     body.querySelector("#close").onclick=closePanel;
     const hb=body.querySelector("#hintBtn");
@@ -1042,18 +817,8 @@ function openStation(it){
     if(typed) letterEntry(body,d,done);
     if(d.type==="morse") body.querySelector("#play").onclick=()=>playMorse(d.answer,body.querySelector("#led"));
     if(d.type==="wires") mountWires(body,done);
-    if(d.type==="pick") mountPick(body,d,done);
     if(d.type==="simon") mountSimon(body,done);
   });
-}
-function mountPick(body,d,done){
-  const pool=["Place card","Newspaper clipping","Brass bell","Recipe page","Mirror shard","Rusty key"]; let chosen=[];
-  const ans=body.querySelector("#pans"),grid=body.querySelector("#pgrid");
-  const draw=()=>{ ans.innerHTML=[0,1,2].map(i=>`<div class="pslot ${i===chosen.length?"cur":""}">${chosen[i]||(i+1)}</div>`).join("");
-    grid.innerHTML=pool.map(n=>`<button data-n="${n}" ${chosen.includes(n)?"disabled":""}>${n}</button>`).join(""); };
-  grid.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled)return; sfx.spark(); tone(220+chosen.length*110,.3,0,"sine",.15,90); chosen.push(b.dataset.n); draw();
-    if(chosen.length===3){ if(chosen.every((c,i)=>c===d.order[i])) setTimeout(done,350); else setTimeout(()=>{ wrongFx(ans); noise(.5,0,.25,"lowpass",600,100); chosen=[]; draw(); },350); } });
-  draw();
 }
 function mountWires(body,done){
   const box=body.querySelector("#wb"),svg=body.querySelector("#wsvg"),stat=body.querySelector("#wstat");
@@ -1088,7 +853,7 @@ function mountSimon(body,done){
 function solveStation(it){
   const d=it.def; sfx.solve(); burst(it.anchor.position,0x8ff0c8,60); if(navigator.vibrate)navigator.vibrate([20,60,20]);
   if(it.model.userData.unlock){ it.model.userData.unlock(); sfx.unlock(); }
-  state.solved.push(it.i); if(ROOM.sequential) state.step++; renderBag();
+  state.solved.push(it.i); if(ROOM.sequential) state.step++;
   if(d.info){ state.notes.push(d.after); renderNotes(); }
   if(d.bonus){ state.remaining+=d.bonus; lastSec=-1; }
   persist();
@@ -1108,14 +873,6 @@ function openBomb(it){
   });
 }
 
-/* halfway through the bomb: a radio tip names a wrong wire the player doesn't already know about */
-function halfHint(){ state.halfHint=true; const known=state.notes.join(" ");
-  const w=ROOM.wrong.find(c=>!known.includes(c))||ROOM.wrong[0];
-  const msg=`Radio crackle: <em>"Bomb squad here. Whatever you do, do NOT cut the ${w} wire."</em>`;
-  if(!state.notes.some(n=>n.includes("Bomb squad"))) state.notes.push(`Bomb squad: the ${w} wire is NOT the one.`); renderNotes(); renderBag();
-  noise(1.2,0,.18,"bandpass",1800,900,2); [0,.25].forEach(t=>tone(1400,.08,t,"square",.06)); if(navigator.vibrate)navigator.vibrate([60,60,60]);
-  toast(msg,7000); objective(); }
-
 /* ---------- endings ---------- */
 function flash(cls){ const f=$("#flash"); f.className=""; void f.offsetWidth; f.className=cls; }
 function endCard(html,delay){ setTimeout(()=>openPanel(html,b=>{ const l=b.querySelector("#look"); if(l)l.onclick=closePanel; b.querySelector("#again").onclick=()=>{ store.clear(); location.reload(); }; }),delay); }
@@ -1125,7 +882,7 @@ function winHouse(it){ if(state.done)return; state.done=true; state.solved.push(
   it.model.userData.unlock(); [0,400,800,1200].forEach(ms=>setTimeout(()=>items.forEach(x=>{ if(x.anchor.visible&&x.def.prop) burst(x.anchor.position,[0xf08a24,0x8ff0c8,0xffd27a][ms/400%3],40,1.4); }),ms));
   objective(); store.clear(); $("#examine").hidden=true;
   endCard(`<div class="eyebrow">You escaped</div><h2 class="big">Happy Halloween!</h2><p>${ROOM.ending}</p>
-    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>${ROOM.hard?"Mode":"Hints used"}</span><b>${ROOM.hard?"Hard":state.hints}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
+    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>Hints used</span><b>${state.hints}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
     <div class="row"><button class="btn ghost" id="look">Look around</button><button class="btn primary" id="again">Play again</button></div>`,3400); }
 function defuse(it){ if(state.done)return; state.done=true; sfx.defuse(); flash("win"); drawBombScreen(it.model.userData.screen,0,"safe"); document.body.classList.remove("urgent");
   burst(it.anchor.position,0x3fbf6a,80); if(navigator.vibrate)navigator.vibrate([40,60,40]); objective();
@@ -1141,33 +898,13 @@ function explode(cut){ if(state.done)return; state.done=true; closePanel(); sfx.
 
 /* ---------- buttons ---------- */
 $("#examine").onclick=()=>{ if(examTarget) openStation(examTarget); };
-const showInvite=(first)=>openPanel(`<div class="eyebrow">${first?"This arrived in your mailbox":"Your invitation"}</div>${invitationHTML(ROOM.inviteWord,ROOM.host)}<div class="row"><button class="btn primary" id="ok">${first?"Go inside":"Back"}</button></div>`,b=>b.querySelector("#ok").onclick=()=>{ closePanel(); if(first){ sfx.creak(); toast(ROOM.hard?"The door slams shut behind you. Everything is out there. Solve it all to escape.":"The door slams shut behind you. Look for a glowing <b style='color:#f08a24'>?</b>",4500); } });
-function cipherText(d){ if(d.type==="shift")return caesar(d.answer,d.shift); if(d.type==="atbash")return atbash(d.answer); if(d.type==="morse")return toMorse(d.answer);
-  if(d.type==="rail"){ const [t,b]=railRows(d.answer); return t+" / "+b; } if(d.type==="capitals")return "Capital letters hidden in a story"; if(d.type==="pick")return d.recipe; return d.display||""; }
-function bagEntries(){ const sv=state.solved.map(i=>items[i]).filter(Boolean); return {sv, ghost:sv.find(it=>it.def.type==="scare"), codes:sv.filter(it=>it.def.answer), things:sv.filter(it=>it.def.item)}; }
-function renderBag(){ if(!ROOM)return; const b=bagEntries(); $("#bagCount").textContent=(ROOM.inviteWord?1:0)+b.codes.length+(b.ghost?1:0)+b.things.length; }
-function openBag(){ const b=bagEntries(), H=ROOM.id==="house";
-  const words=[]; if(H) words.push(`<span class="word"><small>Invitation, in red</small>${ROOM.inviteWord}</span>`);
-  if(b.ghost&&!ROOM.hard) words.push(`<span class="word ghostw"><small>The ghost shouted</small>${b.ghost.def.word}</span>`);
-  b.codes.forEach(it=>words.push(`<span class="word"><small>${it.def.name}</small>${it.def.answer}</span>`));
-  const codes=b.codes.filter(it=>!["riddle"].includes(it.def.type)||it.def.display).map(it=>`<div class="cline"><div class="lbl">${it.def.name} · ${TYPE_LABEL[it.def.type]||"Puzzle"}</div><div class="ct">${cipherText(it.def)}</div><div class="ans">${it.def.answer}</div></div>`).join("");
-  const story=[`<p>${ROOM.intro}</p>`,...b.sv.filter(it=>it.def.after).map(it=>`<p>${it.def.after}</p>`)].join("");
-  openPanel(`<div class="eyebrow">Inventory</div><h2>Your bag</h2>
-    ${H?`<div class="bagsec"><h3>Invitation</h3><details class="inv"><summary>Read your invitation</summary>${invitationHTML(ROOM.inviteWord,ROOM.host)}</details></div>`:""}
-    <div class="bagsec"><h3>Words to remember</h3>${words.length?`<div class="words">${words.join("")}</div>`:`<p class="empty">Nothing yet.</p>`}</div>
-    ${H?`<div class="bagsec"><h3>Things you've found</h3>${b.things.length?`<div class="itemlist">${b.things.map(it=>`<span>${it.def.item}</span>`).join("")}</div>`:`<p class="empty">Your pockets are empty.</p>`}</div>`:""}
-    <div class="bagsec"><h3>Codes cracked</h3>${codes||`<p class="empty">None yet.</p>`}</div>
-    ${!H&&state.notes.length?`<div class="bagsec"><h3>What you know</h3><ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div>`:""}
-    <div class="bagsec storylog"><h3>The story so far</h3>${story}</div>
-    <div class="row"><button class="btn primary" id="ok">Close</button></div>`,x=>x.querySelector("#ok").onclick=closePanel); }
-$("#bagChip").onclick=openBag;
+const showInvite=(first)=>openPanel(`<div class="eyebrow">${first?"This arrived in your mailbox":"Your invitation"}</div>${INVITATION}<div class="row"><button class="btn primary" id="ok">${first?"Go inside":"Back"}</button></div>`,b=>b.querySelector("#ok").onclick=()=>{ closePanel(); if(first){ sfx.creak(); toast("The door slams shut behind you. Look for a glowing <b style='color:#f08a24'>?</b>",4500); } });
+$("#inviteChip").onclick=()=>showInvite(false);
 $("#notesChip").onclick=()=>openPanel(`<div class="eyebrow">Notes</div><h2>What you know</h2>${state.notes.length?`<ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul>`:"<p>Nothing yet. Find the question marks.</p>"}<div class="row"><button class="btn primary" id="ok">Back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel);
 $("#muteBtn").onclick=()=>{ state.muted=!state.muted; audio(); if(master)master.gain.value=state.muted?0:1; $("#sndOn").hidden=state.muted; $("#sndOff").hidden=!state.muted; };
 $("#menuBtn").onclick=()=>openPanel(`<div class="eyebrow">Paused</div><h2>${ROOM.title}</h2><p>${ROOM.id==="bomb"?"The clock keeps running.":`Time ${fmt(state.elapsed)}. Hints used ${state.hints}.`}</p>
-  <div class="stack"><button class="btn primary" id="resume">Resume</button>${state.mode==="cam"?`<button class="btn" id="touchCtl">${state.manualLook?"Use motion sensors":"Touch controls (drag to turn)"}</button>`:""}<button class="btn ghost" id="diag">Show diagnostics</button><button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
-  b=>{ b.querySelector("#resume").onclick=closePanel;
-       b.querySelector("#diag").onclick=()=>{ startDebug(); closePanel(); };
-       const tc=b.querySelector("#touchCtl"); if(tc) tc.onclick=()=>{ setManual(!state.manualLook); closePanel(); }; b.querySelector("#restart").onclick=()=>{ if(ROOM.id==="house")store.clear(); location.href=location.pathname+location.search; }; const x=b.querySelector("#exit"); if(x)x.onclick=()=>xrSession.end(); });
+  <div class="stack"><button class="btn primary" id="resume">Resume</button><button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
+  b=>{ b.querySelector("#resume").onclick=closePanel; b.querySelector("#restart").onclick=()=>{ if(ROOM.id==="house")store.clear(); location.href=location.pathname+location.search; }; const x=b.querySelector("#exit"); if(x)x.onclick=()=>xrSession.end(); });
 
 /* ---------- share / QR ---------- */
 function roomUrl(id){ return location.origin+location.pathname+"?room="+id; }
@@ -1179,47 +916,41 @@ $("#shareBtn").onclick=()=>{ const local=!/^https?:$/.test(location.protocol)||l
     <div class="row"><button class="btn primary" id="ok">Done</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); };
 
 /* ---------- save ---------- */
-function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius,seed:state.seed,hard:state.hard}); }
+function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
 
 /* ---------- start ---------- */
 function pickRoom(id){ state.scenario=id; [...$("#roomPick").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===id)); updateContinue(); }
 $("#roomPick").addEventListener("click",e=>{ const b=e.target.closest(".room"); if(b) pickRoom(b.dataset.s); });
 $("#roomSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; [...$("#roomSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); state.radius=+b.dataset.r; });
 const saved=store.get();
-function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.solved&&saved.solved.length>0&&saved.seed); if(!cb.hidden) cb.textContent=`Continue where you left off (${saved.hard?"hard, ":""}${saved.solved.length} solved)`; }
-$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setMode(b.dataset.m==="hard"); });
-function setMode(h){ state.hard=h; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",(x.dataset.m==="hard")===h)); $("#modeNote").textContent=h?"Every clue is out at once, in any order. No hints, no keys, no arrows.":"One clue at a time, with hints and arrows to guide you."; }
+function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue where you left off (clue ${saved.step+1})`; }
 // deep link: ?room=house or ?room=bomb (also #house / #bomb)
-(function(){ if(new URLSearchParams(location.search).get("mode")==="hard") setMode(true); })();
 (function(){ const q=new URLSearchParams(location.search).get("room")||location.hash.slice(1); if(q!=="house"&&q!=="bomb")return; pickRoom(q);
   $("#pickField").hidden=true; const b=$("#invitedBanner"); b.hidden=false;
   b.innerHTML=q==="house"?`<div class="eyebrow">You've been invited</div><h3>The House on Hollow Lane</h3><p>A house that only appears on Halloween night. Find the clues, rescue the missing lamplighter, and get out. About 15 minutes.</p>`
     :`<div class="eyebrow" style="color:var(--red)">Incoming</div><h3>Five Minutes</h3><p>A bomb, three wires, five minutes. Find the clues and cut the right one.</p>`; })();
 updateContinue();
 function begin(mode,resume){
-  audio();
-  if(resume&&saved&&saved.seed) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius,seed:saved.seed,hard:!!saved.hard});
-  else { state.seed=(Math.random()*2**31)|0||1; resume=false; }
-  ROOM=state.scenario==="bomb"?bombRoom(state.seed,state.hard):houseRoom(state.seed,state.hard);
+  audio(); ROOM=state.scenario==="bomb"?bombRoom():houseRoom();
+  if(resume&&saved) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius});
   if(ROOM.timer.mode==="down") state.remaining=ROOM.timer.seconds;
   state.mode=mode; state.running=true; buildItems();
   const isB=ROOM.id==="bomb"; document.body.classList.toggle("bomb",isB);
-  $("#progChip").hidden=isB; $("#notesChip").hidden=true; renderNotes(); renderBag();
+  $("#progChip").hidden=isB; $("#inviteChip").hidden=isB; $("#notesChip").hidden=!isB; renderNotes();
   $("#start").hidden=true; $("#hud").hidden=false; objective();
   const prev=mode==="preview"; document.body.classList.toggle("preview",prev); $("#stick").hidden=!prev; $("#previewTag").hidden=!prev; roomShell.visible=prev;
   scene.background=prev?new THREE.Color(0x0e0c14):null; if(prev){ camera.position.set(0,0,0); look.yaw=0; look.pitch=0; }
   if(mode==="cam") setTimeout(()=>toast("Turn to look around. Take real steps to walk toward a <b style='color:#f08a24'>?</b>",5000),isB?3400:0);
   if(isB) toast("The clock is running. Find the clues before you cut.");
-  else if(resume) toast(state.hard?"Welcome back.":"Welcome back. Follow the glowing <b style='color:#f08a24'>?</b>");
+  else if(resume&&saved) toast("Welcome back. Follow the glowing <b style='color:#f08a24'>?</b>");
   else showInvite(true);
 }
 async function startAR(resume){
   let session=null;
-  let xrFailed=false; try{ xrFailed=sessionStorage.getItem("xrFailed")==="1"; }catch(e){}
-  if(xrOK&&!xrFailed){ const cfgs=[{requiredFeatures:["local"],optionalFeatures:["dom-overlay"],domOverlay:{root:$("#overlay")}},{optionalFeatures:["local","dom-overlay"],domOverlay:{root:$("#overlay")}}];
+  if(xrOK){ const cfgs=[{requiredFeatures:["local"],optionalFeatures:["dom-overlay"],domOverlay:{root:$("#overlay")}},{optionalFeatures:["local","dom-overlay"],domOverlay:{root:$("#overlay")}}];
     for(const c of cfgs){ try{ session=await navigator.xr.requestSession("immersive-ar",c); break; }catch(e){ session=null; } }
     if(session&&!session.domOverlayState){ try{ await session.end(); }catch(e){} session=null; } }
-  if(!session){ try{ sessionStorage.setItem("xrFailed","1"); }catch(e){} return startCamMode(resume); }
+  if(!session) return startCamMode(resume);
   try{ xrSession=session; renderer.xr.setReferenceSpaceType("local"); await renderer.xr.setSession(session); }
   catch(e){ try{ renderer.xr.setReferenceSpaceType("viewer"); await renderer.xr.setSession(session); }catch(e2){ try{session.end()}catch(e3){} xrSession=null; return startCamMode(resume); } }
   $("#overlay").addEventListener("beforexrselect",e=>e.preventDefault());
@@ -1233,7 +964,7 @@ let xrOK=false;
   try{ xrOK=!!(navigator.xr&&await navigator.xr.isSessionSupported("immersive-ar")); }catch(e){}
   const camOK=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
   if(!xrOK&&!camOK){ const b=$("#arBtn"); b.disabled=true; b.textContent="Camera not available here"; $("#arNote").className="note warn"; $("#arNote").textContent="This browser can't open the camera. Open the game link in Chrome or Safari on a phone. You can still try the preview."; }
-  $("#arBtn").onclick=()=>startCamMode(false); $("#xrBtn").hidden=!xrOK; $("#xrBtn").onclick=()=>{ try{ sessionStorage.removeItem("xrFailed"); }catch(e){} startAR(false); }; $("#continueBtn").onclick=()=>startCamMode(true); $("#previewBtn").onclick=()=>begin("preview",false);
+  $("#arBtn").onclick=()=>startAR(false); $("#continueBtn").onclick=()=>startAR(true); $("#previewBtn").onclick=()=>begin("preview",false);
 })();
 </script>
 </body>
