@@ -162,6 +162,21 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
 .stat b{font-family:var(--f-mono);color:var(--accent)}
 .notes li{margin-bottom:8px;color:var(--paper)}
 .big{font-size:44px!important}
+.bagsec{margin:18px 0 0}
+.bagsec h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.words{display:flex;flex-wrap:wrap;gap:8px}
+.word{font:700 15px var(--f-mono);background:#26212f;border:1px solid var(--accent-dim);color:var(--accent);padding:6px 10px;border-radius:8px}
+.word.ghostw{border-color:var(--ghost);color:var(--ghost)}
+.word small{display:block;font:500 10px var(--f-body);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.cline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cline .lbl{font-size:12px;color:var(--muted)}
+.cline .ct{font:500 13px var(--f-mono);color:var(--paper);word-break:break-word}
+.cline .ans{grid-row:1/3;grid-column:2;align-self:center;font:700 14px var(--f-mono);color:var(--ghost)}
+.itemlist{display:flex;flex-wrap:wrap;gap:8px}
+.itemlist span{background:#26212f;border-radius:999px;padding:6px 12px;font-size:13px}
+.storylog p{color:var(--paper);margin:0 0 10px;padding-left:12px;border-left:2px solid var(--line)}
+details.inv summary{cursor:pointer;color:var(--accent);font-weight:600;padding:6px 0}
+.empty{color:var(--muted);font-size:14px}
 .qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:8px 0}
 .qr{background:#17141e;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;min-width:0}
 .qr .code{background:#fff;border-radius:8px;padding:8px;display:inline-block;max-width:100%}
@@ -180,8 +195,8 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
 <div id="overlay">
   <div id="hud" hidden>
     <div class="chip" id="timerChip"><span id="timer">00:00</span></div>
-    <div class="chip" id="progChip">Clue <b id="prog">1/11</b></div>
-    <button class="chip" id="inviteChip" aria-label="Your invitation"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f08a24" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Invite</button>
+    <div class="chip" id="progChip"><span id="progLbl">Clue</span> <b id="prog">1/11</b></div>
+    <button class="chip" id="bagChip" aria-label="Open your bag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f08a24" stroke-width="2"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Bag <b id="bagCount">1</b></button>
     <button class="chip" id="notesChip" hidden>Notes <b id="notesCount">0</b></button>
     <div class="spacer"></div>
     <button class="chip iconbtn" id="muteBtn" aria-label="Mute sound"><svg id="sndOn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg><svg id="sndOff" hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button>
@@ -218,6 +233,14 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
         </div>
       </div>
       <div class="field">
+        <label>Difficulty</label>
+        <div class="seg" id="modeSeg">
+          <button data-m="easy" aria-pressed="true">Easy</button>
+          <button data-m="hard" aria-pressed="false">Hard</button>
+        </div>
+        <p class="note" id="modeNote" style="margin:8px 0 0">One clue at a time, with hints and arrows to guide you.</p>
+      </div>
+      <div class="field">
         <label>Room size</label>
         <div class="seg" id="roomSeg">
           <button data-r="1.4" aria-pressed="false">Small</button>
@@ -244,89 +267,122 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
    angle: degrees around you (0 = straight ahead at start, 90 = right)
    dist: fraction of room radius · y: metres relative to phone height (floor ≈ -1.3)
    ===================================================================== */
-const INVITE_WORD="LANTERN", GHOST_WORD="PUMPKIN";
-const INVITATION=`<div class="invite"><h3>You're Invited</h3>
-  to the House on Hollow Lane,<br>which appears for one night only.<br><br>
-  Come at dusk. Bring your cleverest friends.<br>Follow the glow of my <span class="red">LANTERN</span>.<br><br>
-  The door will close behind you.<br>Don't worry. Probably.
-  <div class="sig">~ The Host</div></div>`;
+/* Seeded randomness: each game draws its own answers and layout; a saved game keeps its seed. */
+function mulberry(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+const shuffleR=(r,a)=>a.map(v=>[r(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+function spreadAngles(r,n,fixedFirst){ const step=360/n, off=r()*step*.3; const a=Array.from({length:n},(_,i)=>Math.round(i*step+off)%360); if(!fixedFirst) return shuffleR(r,a); return [0,...shuffleR(r,a.slice(1))]; }
 
-function houseRoom(){
-  return {
-    id:"house", title:"The House on Hollow Lane", sequential:true, timer:{mode:"up"}, ambient:"house", decor:true,
-    stations:[
-      { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
-        lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
-        display:".REPAPSWEN EHT DAER", ask:"What does the card tell you to read?",
-        hints:["Try reading it from right to left.","Read it backwards: READ THE ... ?"],
-        after:"Read the newspaper. There's an old one pinned to a crumbling wall." },
-      { name:"Old Newspaper", model:"wallNews", angle:60, dist:1, y:-.45, prop:true, type:"capitals", answer:"CHEST",
-        lead:"Probably just a Halloween decoration. Some of the letters look odd, though.",
-        ask:"Circle the capital letters. What do they spell?",
-        hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.","Write down only the capital letters, in order. There are five."],
-        after:"C-H-E-S-T. A strange thing to hide in a newspaper. Find the chest." },
-      { name:"Treasure Chest", model:"chest", angle:105, dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:"RADIO",
-        lead:"The chest's lock has a note: <em>Every letter took one step forward. A became B.</em>",
-        ask:"Step each letter back by one. What is the word?",
-        after:"Inside the chest: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
-      { name:"Old Radio", model:"radio", angle:150, dist:.95, y:-.5, type:"morse", answer:"BOO",
-        lead:"The radio beeps the same signal over and over. A key is taped to its side.", ask:"What is the radio saying?",
-        minikey:["B -...","G --.","O ---","S ...","T -"],
-        after:"Boo? From somewhere behind you, something giggles." },
-      { name:"?", model:"none", angle:265, dist:1, y:-.1, type:"scare", word:GHOST_WORD,
-        after:"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
-      { name:"Portrait", model:"wallPortrait", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
-        lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
-        ask:"Where is Barnaby?",
-        after:"Barnaby is locked in a cage somewhere in this house. Underneath the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>" },
-      { name:"Coffin", model:"coffin", angle:190, dist:.95, y:-1.02, prop:true, type:"riddle", answer:INVITE_WORD,
-        lead:"Carved on the lid: <em>I open only for invited guests.</em>", display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.",
-        ask:"What word was red on your invitation?",
-        hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
-        after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
-      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD,
-        lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
-        display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
-        hints:["Think back to the ghost that zoomed at you. It shouted a word.","It's orange, round, and you carve a face into it."],
-        after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"But the front door is locked. The house only lets people go when it's happy. Play its music box!\"</em>" },
-      { name:"Music Box", model:"musicbox", angle:300, dist:.75, y:-.55, type:"simon",
-        lead:"A little music box with four coloured gems. Watch which ones light up, then play them back.",
-        after:"The house hums a happy tune. Over by the table, a fuse box sparks." },
-      { name:"Fuse Box", model:"wallFuse", angle:28, dist:1, y:-.4, prop:true, type:"wires",
-        lead:"The front door's lock has no power. Reconnect each wire to its matching colour.",
-        after:"The lights flicker on. The front door's lock glows with zigzag letters." },
-      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true,
-        lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
-        ask:"What is the password?" }
-    ],
-    ending:"The front door swings open into cool night air. Barnaby lights his lantern and tips his hat. \"Same time next year?\" Behind you, the house on Hollow Lane fades away like fog."
-  };
+const INVITE_WORDS={LANTERN:"something you carry to light the way",CANDLE:"wax with a little flame on top",FIREFLY:"a little bug that glows at night",MOONBEAM:"light shining down from the moon"};
+const GHOST_WORDS={PUMPKIN:"It's orange and round, and you carve a face into it.",COBWEB:"A spider spins it in dusty corners.",SPIDER:"It has eight legs and spins webs.",CANDY:"Trick-or-treaters fill their bags with it.",POTION:"A witch brews it in her cauldron."};
+function invitationHTML(w){ return `<div class="invite"><h3>You're Invited</h3>
+  to the House on Hollow Lane,<br>which appears for one night only.<br><br>
+  Come at dusk. Bring your cleverest friends.<br>Follow the glow of my <span class="red">${w}</span>.<br><br>
+  The door will close behind you.<br>Don't worry. Probably.
+  <div class="sig">~ The Host</div></div>`; }
+// capitalise the letters of `word`, in order, spread through `text`
+function hideCapitals(text,word){ const t=[...text.toLowerCase()]; let prev=-1; const n=word.length;
+  for(let i=0;i<n;i++){ const ch=word[i].toLowerCase(); let start=Math.max(prev+1,Math.floor(i*t.length/n)); let k=t.indexOf(ch,start); if(k<0) k=t.indexOf(ch,prev+1); if(k<0) continue; t[k]=t[k].toUpperCase(); prev=k; }
+  return t.join(""); }
+const NEWS_TEXT="barnaby finch, the friendly town lamplighter, was last seen walking toward hollow lane on halloween night. neighbours say he loved riddles and always carried a lantern. it was found in the grass the next morning, next to his walking stick. if you see him, please tell the sheriff right away.";
+
+function houseRoom(seed,hard){
+  const r=mulberry(seed);
+  const INV=pick(r,Object.keys(INVITE_WORDS)), GHOST=pick(r,Object.keys(GHOST_WORDS));
+  const paper=pick(r,["NEWSPAPER","GAZETTE"]), box=pick(r,[["CHEST","Treasure Chest"],["TRUNK","Old Trunk"]]);
+  const chestMsg=pick(r,["RADIO","STATIC","SIGNAL"]), morse=pick(r,["BOO","EEK","BAT","OWL"]);
+  const where=pick(r,["CAGE","IRON CAGE"]), pass=pick(r,["FREEDOM","GOODBYE","MOONRISE","HOMEWARD"]);
+  const verb=pick(r,["READ","FIND","CHECK"]);
+  const keyLetters=[...new Set(morse)], extra=shuffleR(r,["G","S","T","K","N","R","A"].filter(c=>!keyLetters.includes(c))).slice(0,5-keyLetters.length);
+  const ang=spreadAngles(r,11,!hard);
+  const st=[
+    { id:"table", name:"Dining Table", model:"table", dist:.8, y:-.58, prop:true, type:"backwards", answer:paper,
+      lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
+      hardLead:"A place card sits by your chair.",
+      display:[...(verb+" THE "+paper+".")].reverse().join(""), ask:"What does the card tell you to "+verb.toLowerCase()+"?",
+      hints:["Try reading it from right to left.",`Read it backwards: ${verb} THE ...?`],
+      after:`${verb[0]+verb.slice(1).toLowerCase()} the ${paper==="GAZETTE"?"Gazette":"newspaper"}. There's an old one pinned to a crumbling wall.` },
+    { id:"news", name:"Old Newspaper", model:"wallNews", dist:1, y:-.45, prop:true, type:"capitals", answer:box[0], newsBody:hideCapitals(NEWS_TEXT,box[0]),
+      lead:"Probably just a Halloween decoration. Some of the letters look odd, though.", hardLead:"",
+      ask:"Circle the capital letters. What do they spell?",
+      hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.",`Write down only the capital letters, in order. There are ${box[0].length}.`],
+      after:`${box[0].split("").join("-")}. A strange thing to hide in a newspaper. Find the ${box[0].toLowerCase()}.` },
+    { id:"chest", name:box[1], model:"chest", dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:chestMsg,
+      lead:"The lock has a note: <em>Every letter took one step forward. A became B.</em>", hardLead:"Letters scratched into the lock:",
+      ask:"Step each letter back by one. What is the word?",
+      after:"Inside: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
+    { id:"radio", name:"Old Radio", model:"radio", dist:.95, y:-.5, type:"morse", answer:morse,
+      lead:"The radio beeps the same signal over and over. A key is taped to its side.", hardLead:"The radio beeps the same signal over and over.", ask:"What is the radio saying?",
+      minikey:shuffleR(r,[...keyLetters,...extra]).map(c=>c+" "+MORSE[c]),
+      after:`"${morse}"? From somewhere behind you, something giggles.` },
+    { id:"ghost", name:"?", model:"none", dist:1, y:-.1, type:"scare", word:GHOST,
+      after:hard?"A ghost! It shouted a word as it zoomed past. Remember it.":"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
+    { id:"portrait", name:"Portrait", model:"wallPortrait", dist:1, y:-.4, prop:true, type:"atbash", answer:where,
+      lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
+      hardLead:"A painting of a smiling man holding a lantern. Letters are carved into the frame.", ask:"Where is Barnaby?",
+      after:`Barnaby is locked in a cage somewhere in this house. Under the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>` },
+    { id:"coffin", name:"Coffin", model:"coffin", dist:.95, y:-1.02, prop:true, type:"riddle", answer:INV,
+      lead:"Carved on the lid: <em>I open only for invited guests.</em>", hardLead:"Carved on the lid: <em>I open only for invited guests.</em>",
+      display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.", ask:"What word was red on your invitation?",
+      hints:["Tap Bag at the top of the screen to read your invitation again.",`It's ${INVITE_WORDS[INV]}.`],
+      after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
+    { id:"cage", name:"Iron Cage", model:"cage", dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST, requires:["coffin"],
+      lockedMsg:"Barnaby waves from inside. <em>\"The lock needs a key! I heard the ghost hid it somewhere.\"</em>",
+      lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
+      hardLead:"Barnaby Finch is inside, waving. You turn the rusty key, but the lock wants a word.",
+      display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
+      hints:["Think back to the ghost that zoomed at you. It shouted a word.",GHOST_WORDS[GHOST]],
+      after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"But the front door is locked. The house only lets people go when it's happy. Play its music box!\"</em>" },
+    { id:"music", name:"Music Box", model:"musicbox", dist:.75, y:-.55, type:"simon",
+      lead:"A little music box with four coloured gems. Watch which ones light up, then play them back.", hardLead:"",
+      after:"The house hums a happy tune. Somewhere, a fuse box sparks." },
+    { id:"fuse", name:"Fuse Box", model:"wallFuse", dist:1, y:-.4, prop:true, type:"wires",
+      lead:"The front door's lock has no power. Reconnect each wire to its matching colour.", hardLead:"",
+      after:"The lights flicker on. The front door's lock glows with zigzag letters." },
+    { id:"door", name:"Front Door", model:"door", dist:1.05, y:-.32, prop:true, type:"rail", answer:pass, final:true, requires:"all",
+      lockedMsg:"Locked tight. The house isn't ready to let you go.",
+      lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
+      hardLead:"Two rows of glowing letters on the lock.", ask:"What is the password?" }
+  ];
+  const ITEMS={table:"Place card",news:"Newspaper clipping",chest:"Brass bell",coffin:"Rusty key",cage:"Barnaby (rescued!)",music:"Music box tune"};
+  st.forEach((d,i)=>{ d.angle=ang[i]; d.item=ITEMS[d.id]; });
+  return { id:"house", intro:"A house appears on Hollow Lane once a year, on Halloween night, and nobody knows why. This year, you got an invitation. The moment you stepped inside, the door locked behind you.", title:"The House on Hollow Lane", sequential:!hard, hard, timer:{mode:"up"}, ambient:"house", decor:true, inviteWord:INV, stations:st,
+    ending:"The front door swings open into cool night air. Barnaby lights his lantern and tips his hat. \"Same time next year?\" Behind you, the house on Hollow Lane fades away like fog." };
 }
 
-function bombRoom(){
-  const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
-  const [correct,w1,w2]=shuffle(["RED","GREEN","BLUE"]);
-  const rq={RED:"I'm the colour of a fire engine, a stop sign, and a ripe strawberry.",GREEN:"I'm the colour of fresh grass, a go light, and a frog.",BLUE:"I'm the colour of a clear sky, the deep ocean, and a blueberry."}[correct];
-  return {
-    id:"bomb", title:"Five Minutes", sequential:false, timer:{mode:"down",seconds:300}, ambient:"tick", correct,
-    stations:[
-      { name:"The Bomb", model:"bomb", angle:0, dist:.7, y:-.4, type:"bomb", always:true,
-        lead:"Three wires. Cut the right one and it stops. Cut the wrong one and it doesn't." },
-      { name:"Torn Note", model:"note", angle:95, dist:1, y:-.15, type:"shift", shift:1, answer:"NOT "+w1, info:true,
-        lead:"A note taped under the desk: <em>Every letter took one step forward. A became B.</em>", ask:"Step each letter back by one:",
-        after:`Do NOT cut the ${w1} wire.` },
-      { name:"Sensor Panel", model:"panel", angle:200, dist:1, y:-.1, type:"wires", info:true,
-        lead:"The tripwire sensor is disconnected. Reconnect it to read the log.",
-        after:`Sensor log: the ${w2} wire is live. Cutting it sets off the charge.` },
-      { name:"Lock Box", model:"lockbox", angle:285, dist:.95, y:-.35, type:"number", answer:"13", info:true,
-        lead:"A two-digit lock. Scratched on the lid:", display:"1 · 1 · 2 · 3 · 5 · 8 · ?", ask:"What comes next?",
-        hints:["Each number comes from the two before it.","Add the last two: 5 + 8."],
-        after:`Inside is a card with a riddle: "${rq} Cut me."` },
-      { name:"Override Keypad", model:"keypad", angle:150, dist:.9, y:-.2, type:"simon", bonus:45,
-        lead:"An override panel. Watch the lights, then repeat the pattern to buy time.",
-        after:"Override accepted. 45 seconds added to the clock." }
-    ]
-  };
+function bombRoom(seed,hard){
+  const r=mulberry(seed);
+  const [correct,w1,w2]=shuffleR(r,["RED","GREEN","BLUE"]);
+  const RQ={RED:["I'm the colour of a fire engine, a stop sign, and a ripe strawberry.","Roses are me, so are ladybugs and ketchup."],
+            GREEN:["I'm the colour of fresh grass, a go light, and a frog.","Limes, leaves, and pickles all wear me."],
+            BLUE:["I'm the colour of a clear sky, the deep ocean, and a blueberry.","Jeans, bluebirds, and the sea are all me."]};
+  const rq=pick(r,RQ[correct]);
+  const noteVerb=pick(r,["NOT","NEVER","SKIP","AVOID"]);
+  const seqs=[["1 · 1 · 2 · 3 · 5 · 8 · ?","13",["Each number comes from the two before it.","Add the last two: 5 + 8."]],
+              ["2 · 4 · 8 · 16 · ?","32",["Look at how each number relates to the one before.","Each number doubles."]],
+              ["3 · 6 · 9 · 12 · ?","15",["Look at the gap between numbers.","Add 3 each time."]],
+              ["1 · 4 · 9 · 16 · ?","25",["Think of 1×1, 2×2, 3×3...","5 × 5."]],
+              ["50 · 45 · 40 · 35 · ?","30",["Look at the gap between numbers.","Take away 5 each time."]]];
+  const [disp,num,nh]=pick(r,seqs);
+  const ang=spreadAngles(r,4,false); const dists=[1,1,.95,.9];
+  const st=[
+    { id:"bomb", name:"The Bomb", model:"bomb", angle:0, dist:.7, y:-.4, type:"bomb", always:true,
+      lead:"Three wires. Cut the right one and it stops. Cut the wrong one and it doesn't." },
+    { id:"note", name:"Torn Note", model:"note", dist:dists[0], y:-.15, type:"shift", shift:1, answer:noteVerb+" "+w1, info:true,
+      lead:"A note taped under the desk: <em>Every letter took one step forward. A became B.</em>", hardLead:"A note taped under the desk:", ask:"Step each letter back by one:",
+      after:`Do NOT cut the ${w1} wire.` },
+    { id:"sensor", name:"Sensor Panel", model:"panel", dist:dists[1], y:-.1, type:"wires", info:true,
+      lead:"The tripwire sensor is disconnected. Reconnect it to read the log.", hardLead:"",
+      after:`Sensor log: the ${w2} wire is live. Cutting it sets off the charge.` },
+    { id:"lockbox", name:"Lock Box", model:"lockbox", dist:dists[2], y:-.35, type:"number", answer:num, info:true,
+      lead:"A two-digit lock. Scratched on the lid:", hardLead:"Scratched on the lid:", display:disp, ask:"What comes next?", hints:nh,
+      after:`Inside is a card with a riddle: "${rq} Cut me."` },
+    { id:"keypad", name:"Override Keypad", model:"keypad", dist:dists[3], y:-.2, type:"simon", bonus:45,
+      lead:"An override panel. Watch the lights, then repeat the pattern to buy time.", hardLead:"",
+      after:"Override accepted. 45 seconds added to the clock." }
+  ];
+  st.slice(1).forEach((d,i)=>d.angle=[95,150,200,285][i]+Math.round((r()-.5)*30));
+  return { id:"bomb", intro:"A bomb, three wires, five minutes. Somewhere in this room are the clues that say which wire to cut.", title:"Five Minutes", sequential:false, hard, timer:{mode:"down",seconds:300}, ambient:"tick", correct, stations:st };
 }
 
 /* =====================================================================
@@ -340,13 +396,12 @@ const atbash=t=>t.replace(/[A-Z]/g,c=>A[25-A.indexOf(c)]);
 const toMorse=t=>t.split(" ").map(w=>[...w].map(c=>MORSE[c]).join("  ")).join("   /   ");
 const railRows=w=>[[...w].filter((_,i)=>i%2===0).join(""),[...w].filter((_,i)=>i%2===1).join("")];
 const alphaTable=(top,bot)=>{ top=[...top]; bot=[...bot]; const half=Math.ceil(top.length/2); return `<div class="tbl">${[0,half].map(s=>`<table><tr>${top.slice(s,s+half).map(c=>`<td>${c}</td>`).join("")}</tr><tr>${bot.slice(s,s+half).map(c=>`<td style="color:#f08a24">${c}</td>`).join("")}</tr></table>`).join("")}</div>`; };
-const NEWS_BODY=`barnaby finCh, the friendly town lamplighter, was last seen walking toward Hollow lane on halloween night. nEighbours say he loved riddles and always carried hiS lantern. iT was found in the grass the next morning. if you see him, please tell the sheriff.`;
 
 const SAVE_KEY="pocket-escape-house-v1";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
-const state={scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
+const state={seed:1,hard:false,scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:1.9,panelOpen:false,muted:false,scaring:false};
 let renderer,scene,camera,clock,xrSession=null,roomShell,decor=null;
 const items=[]; const camPos=new THREE.Vector3(); const particles=[];
 
@@ -664,7 +719,7 @@ let scareT=-1;
 function startScare(it){ state.scaring=true; scareT=0; sfx.giggle(); setTimeout(()=>sfx.boo(),450); it.q.visible=false;
   setTimeout(()=>{ $("#flash").className=""; void $("#flash").offsetWidth; $("#flash").className="scare"; $("#overlay").classList.add("shake"); if(navigator.vibrate)navigator.vibrate([80,40,160]); },1250);
   setTimeout(()=>{ const w=$("#whisper"); w.textContent=it.def.word; w.className=""; void w.offsetWidth; w.className="on"; },1380);
-  setTimeout(()=>{ $("#overlay").classList.remove("shake"); state.scaring=false; state.solved.push(it.i); state.step++; persist(); toast(it.def.after,5000); objective(); },2700);
+  setTimeout(()=>{ $("#overlay").classList.remove("shake"); state.scaring=false; state.solved.push(it.i); state.step++; persist(); renderBag(); toast(it.def.after,5000); objective(); },2700);
 }
 function updateScare(dt,cam,t){ if(scareT<0||!monster)return; scareT+=dt;
   cam.matrixWorld.decompose(camPos,camQ,camS); fwd.set(0,0,-1).applyQuaternion(camQ); upv.set(0,1,0).applyQuaternion(camQ); rightv.set(1,0,0).applyQuaternion(camQ);
@@ -736,11 +791,11 @@ function loop(time){
 
 /* ---------- HUD ---------- */
 function fmt(s){ s=Math.max(0,Math.floor(s)); return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
-function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=Math.min(state.step+1,n)+"/"+n; }
+function renderProg(){ const n=ROOM.stations.length; $("#prog").textContent=ROOM.hard?state.solved.length+"/"+n:Math.min(state.step+1,n)+"/"+n; $("#progLbl").textContent=ROOM.hard?"Solved":"Clue"; }
 function renderNotes(){ $("#notesCount").textContent=state.notes.length+"/"+ROOM.stations.filter(s=>s.info).length; }
 function objective(){ const o=$("#objective"); let h="";
   if(!state.done){ if(ROOM.id==="bomb") h=state.notes.length<1?`Search the room for <b>?</b> clues. Then cut the right wire.`:`Keep searching, or go back to <b>the bomb</b> and cut a wire.`;
-    else h=`Follow the <b>?</b> and walk up to it.`; }
+    else h=ROOM.hard?`Hard mode · <b>${ROOM.stations.length-state.solved.length}</b> left. Solve everything to escape.`:`Follow the <b>?</b> and walk up to it.`; }
   o.innerHTML=h; o.hidden=!h; if(ROOM.id==="house") renderProg(); }
 let examTarget=null;
 function updateHud(near,tgt,cam){
@@ -749,7 +804,7 @@ function updateHud(near,tgt,cam){
   const ex=$("#examine"),guide=$("#guide"),dist=$("#dist");
   examTarget=near; ex.hidden=!(near&&!state.panelOpen&&!state.done&&!state.scaring);
   if(near){ const ty=near.def.type; ex.textContent=ty==="bomb"?"Defuse the bomb":near.def.model==="door"?"Unlock the door":near.def.model==="cage"?"Help Barnaby":"Examine the "+near.def.name.toLowerCase(); ex.classList.toggle("isBomb",ty==="bomb"); }
-  if(!tgt||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
+  if(!tgt||ROOM.hard||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
   const view=cam.cameras&&cam.cameras.length?cam.cameras[0]:cam;
   const local=tgt.anchor.position.clone().applyMatrix4(new THREE.Matrix4().copy(cam.matrixWorld).invert());
   const ndc=tgt.anchor.position.clone().project(view); const onScreen=local.z<0&&Math.abs(ndc.x)<.85&&Math.abs(ndc.y)<.8; const W=innerWidth,H=innerHeight;
@@ -777,11 +832,11 @@ function hintsFor(d){
   if(d.type==="simon") return ["Tap Watch, then tap the gems in the same order. It gets one longer each round."];
   return [];
 }
-function displayFor(d){
-  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}<small>A→B · B→C · C→D …</small></div>`;
-  if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div><div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`;
-  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div></div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
-  if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${NEWS_BODY}</div>`;
+function displayFor(d){ const H=ROOM.hard;
+  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}${H?"":"<small>A→B · B→C · C→D …</small>"}</div>`;
+  if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div>${H?"":`<div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`}`;
+  if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}${H?"":`<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div>`}</div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
+  if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${d.newsBody}</div>`;
   if(d.type==="rail"){ const [t,b]=railRows(d.answer); return `<div class="rail"><div><span>TOP</span>${t}</div><div><span>BOTTOM</span>${b}</div></div>`; }
   if(d.display) return `<div class="cipher type">${d.display}</div>`;
   return "";
@@ -801,13 +856,16 @@ function letterEntry(body,d,onCheck){
 function openStation(it){
   const d=it.def;
   if(d.type==="bomb") return openBomb(it);
-  const hints=hintsFor(d); let hl=0;
+  if(d.requires){ const need=d.requires==="all"?items.filter(x=>x!==it).map(x=>x.i):d.requires.map(id=>items.find(x=>x.def.id===id).i);
+    const left=need.filter(i=>!state.solved.includes(i)).length;
+    if(left) return openPanel(`<div class="eyebrow">Locked</div><h2>${d.name}</h2><p>${d.lockedMsg||"It won't budge yet."}</p>${d.requires==="all"?`<p><em>${left} thing${left>1?"s":""} left to find in the house.</em></p>`:""}<div class="row"><button class="btn primary" id="ok">Step back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); }
+  const H=ROOM.hard; const hints=H?[]:hintsFor(d); let hl=0;
   const typed=["shift","atbash","morse","riddle","number","backwards","capitals","rail"].includes(d.type);
   let mid=displayFor(d);
-  if(typed) mid+=`${d.ask?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
+  if(typed) mid+=`${d.ask&&!H?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
-  openPanel(`<div class="eyebrow">${TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
+  openPanel(`<div class="eyebrow">${H?(ROOM.id==="house"?"Hard mode":"&nbsp;"):TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2>${(H?d.hardLead:d.lead)?`<p>${H?d.hardLead:d.lead}</p>`:""}${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
     body.querySelector("#close").onclick=closePanel;
     const hb=body.querySelector("#hintBtn");
@@ -853,7 +911,7 @@ function mountSimon(body,done){
 function solveStation(it){
   const d=it.def; sfx.solve(); burst(it.anchor.position,0x8ff0c8,60); if(navigator.vibrate)navigator.vibrate([20,60,20]);
   if(it.model.userData.unlock){ it.model.userData.unlock(); sfx.unlock(); }
-  state.solved.push(it.i); if(ROOM.sequential) state.step++;
+  state.solved.push(it.i); if(ROOM.sequential) state.step++; renderBag();
   if(d.info){ state.notes.push(d.after); renderNotes(); }
   if(d.bonus){ state.remaining+=d.bonus; lastSec=-1; }
   persist();
@@ -882,7 +940,7 @@ function winHouse(it){ if(state.done)return; state.done=true; state.solved.push(
   it.model.userData.unlock(); [0,400,800,1200].forEach(ms=>setTimeout(()=>items.forEach(x=>{ if(x.anchor.visible&&x.def.prop) burst(x.anchor.position,[0xf08a24,0x8ff0c8,0xffd27a][ms/400%3],40,1.4); }),ms));
   objective(); store.clear(); $("#examine").hidden=true;
   endCard(`<div class="eyebrow">You escaped</div><h2 class="big">Happy Halloween!</h2><p>${ROOM.ending}</p>
-    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>Hints used</span><b>${state.hints}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
+    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>${ROOM.hard?"Mode":"Hints used"}</span><b>${ROOM.hard?"Hard":state.hints}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
     <div class="row"><button class="btn ghost" id="look">Look around</button><button class="btn primary" id="again">Play again</button></div>`,3400); }
 function defuse(it){ if(state.done)return; state.done=true; sfx.defuse(); flash("win"); drawBombScreen(it.model.userData.screen,0,"safe"); document.body.classList.remove("urgent");
   burst(it.anchor.position,0x3fbf6a,80); if(navigator.vibrate)navigator.vibrate([40,60,40]); objective();
@@ -898,8 +956,26 @@ function explode(cut){ if(state.done)return; state.done=true; closePanel(); sfx.
 
 /* ---------- buttons ---------- */
 $("#examine").onclick=()=>{ if(examTarget) openStation(examTarget); };
-const showInvite=(first)=>openPanel(`<div class="eyebrow">${first?"This arrived in your mailbox":"Your invitation"}</div>${INVITATION}<div class="row"><button class="btn primary" id="ok">${first?"Go inside":"Back"}</button></div>`,b=>b.querySelector("#ok").onclick=()=>{ closePanel(); if(first){ sfx.creak(); toast("The door slams shut behind you. Look for a glowing <b style='color:#f08a24'>?</b>",4500); } });
-$("#inviteChip").onclick=()=>showInvite(false);
+const showInvite=(first)=>openPanel(`<div class="eyebrow">${first?"This arrived in your mailbox":"Your invitation"}</div>${invitationHTML(ROOM.inviteWord)}<div class="row"><button class="btn primary" id="ok">${first?"Go inside":"Back"}</button></div>`,b=>b.querySelector("#ok").onclick=()=>{ closePanel(); if(first){ sfx.creak(); toast(ROOM.hard?"The door slams shut behind you. Everything is out there. Solve it all to escape.":"The door slams shut behind you. Look for a glowing <b style='color:#f08a24'>?</b>",4500); } });
+function cipherText(d){ if(d.type==="shift")return caesar(d.answer,d.shift); if(d.type==="atbash")return atbash(d.answer); if(d.type==="morse")return toMorse(d.answer);
+  if(d.type==="rail"){ const [t,b]=railRows(d.answer); return t+" / "+b; } if(d.type==="capitals")return "Capital letters hidden in a story"; return d.display||""; }
+function bagEntries(){ const sv=state.solved.map(i=>items[i]).filter(Boolean); return {sv, ghost:sv.find(it=>it.def.type==="scare"), codes:sv.filter(it=>it.def.answer), things:sv.filter(it=>it.def.item)}; }
+function renderBag(){ if(!ROOM)return; const b=bagEntries(); $("#bagCount").textContent=(ROOM.inviteWord?1:0)+b.codes.length+(b.ghost?1:0)+b.things.length; }
+function openBag(){ const b=bagEntries(), H=ROOM.id==="house";
+  const words=[]; if(H) words.push(`<span class="word"><small>Invitation, in red</small>${ROOM.inviteWord}</span>`);
+  if(b.ghost) words.push(`<span class="word ghostw"><small>The ghost shouted</small>${b.ghost.def.word}</span>`);
+  b.codes.forEach(it=>words.push(`<span class="word"><small>${it.def.name}</small>${it.def.answer}</span>`));
+  const codes=b.codes.filter(it=>!["riddle"].includes(it.def.type)||it.def.display).map(it=>`<div class="cline"><div class="lbl">${it.def.name} · ${TYPE_LABEL[it.def.type]||"Puzzle"}</div><div class="ct">${cipherText(it.def)}</div><div class="ans">${it.def.answer}</div></div>`).join("");
+  const story=[`<p>${ROOM.intro}</p>`,...b.sv.filter(it=>it.def.after).map(it=>`<p>${it.def.after}</p>`)].join("");
+  openPanel(`<div class="eyebrow">Inventory</div><h2>Your bag</h2>
+    ${H?`<div class="bagsec"><h3>Invitation</h3><details class="inv"><summary>Read your invitation</summary>${invitationHTML(ROOM.inviteWord)}</details></div>`:""}
+    <div class="bagsec"><h3>Words to remember</h3>${words.length?`<div class="words">${words.join("")}</div>`:`<p class="empty">Nothing yet.</p>`}</div>
+    ${H?`<div class="bagsec"><h3>Things you've found</h3>${b.things.length?`<div class="itemlist">${b.things.map(it=>`<span>${it.def.item}</span>`).join("")}</div>`:`<p class="empty">Your pockets are empty.</p>`}</div>`:""}
+    <div class="bagsec"><h3>Codes cracked</h3>${codes||`<p class="empty">None yet.</p>`}</div>
+    ${!H&&state.notes.length?`<div class="bagsec"><h3>What you know</h3><ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div>`:""}
+    <div class="bagsec storylog"><h3>The story so far</h3>${story}</div>
+    <div class="row"><button class="btn primary" id="ok">Close</button></div>`,x=>x.querySelector("#ok").onclick=closePanel); }
+$("#bagChip").onclick=openBag;
 $("#notesChip").onclick=()=>openPanel(`<div class="eyebrow">Notes</div><h2>What you know</h2>${state.notes.length?`<ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul>`:"<p>Nothing yet. Find the question marks.</p>"}<div class="row"><button class="btn primary" id="ok">Back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel);
 $("#muteBtn").onclick=()=>{ state.muted=!state.muted; audio(); if(master)master.gain.value=state.muted?0:1; $("#sndOn").hidden=state.muted; $("#sndOff").hidden=!state.muted; };
 $("#menuBtn").onclick=()=>openPanel(`<div class="eyebrow">Paused</div><h2>${ROOM.title}</h2><p>${ROOM.id==="bomb"?"The clock keeps running.":`Time ${fmt(state.elapsed)}. Hints used ${state.hints}.`}</p>
@@ -916,33 +992,38 @@ $("#shareBtn").onclick=()=>{ const local=!/^https?:$/.test(location.protocol)||l
     <div class="row"><button class="btn primary" id="ok">Done</button></div>`,b=>b.querySelector("#ok").onclick=closePanel); };
 
 /* ---------- save ---------- */
-function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius}); }
+function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)return; store.set({step:state.step,solved:state.solved,hints:state.hints,elapsed:state.elapsed,radius:state.radius,seed:state.seed,hard:state.hard}); }
 
 /* ---------- start ---------- */
 function pickRoom(id){ state.scenario=id; [...$("#roomPick").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===id)); updateContinue(); }
 $("#roomPick").addEventListener("click",e=>{ const b=e.target.closest(".room"); if(b) pickRoom(b.dataset.s); });
 $("#roomSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; [...$("#roomSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); state.radius=+b.dataset.r; });
 const saved=store.get();
-function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue where you left off (clue ${saved.step+1})`; }
+function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.solved&&saved.solved.length>0&&saved.seed); if(!cb.hidden) cb.textContent=`Continue where you left off (${saved.hard?"hard, ":""}${saved.solved.length} solved)`; }
+$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setMode(b.dataset.m==="hard"); });
+function setMode(h){ state.hard=h; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",(x.dataset.m==="hard")===h)); $("#modeNote").textContent=h?"Every clue is out at once, in any order. No hints, no keys, no arrows.":"One clue at a time, with hints and arrows to guide you."; }
 // deep link: ?room=house or ?room=bomb (also #house / #bomb)
+(function(){ if(new URLSearchParams(location.search).get("mode")==="hard") setMode(true); })();
 (function(){ const q=new URLSearchParams(location.search).get("room")||location.hash.slice(1); if(q!=="house"&&q!=="bomb")return; pickRoom(q);
   $("#pickField").hidden=true; const b=$("#invitedBanner"); b.hidden=false;
   b.innerHTML=q==="house"?`<div class="eyebrow">You've been invited</div><h3>The House on Hollow Lane</h3><p>A house that only appears on Halloween night. Find the clues, rescue the missing lamplighter, and get out. About 15 minutes.</p>`
     :`<div class="eyebrow" style="color:var(--red)">Incoming</div><h3>Five Minutes</h3><p>A bomb, three wires, five minutes. Find the clues and cut the right one.</p>`; })();
 updateContinue();
 function begin(mode,resume){
-  audio(); ROOM=state.scenario==="bomb"?bombRoom():houseRoom();
-  if(resume&&saved) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius});
+  audio();
+  if(resume&&saved&&saved.seed) Object.assign(state,{step:saved.step,solved:saved.solved||[],hints:saved.hints,elapsed:saved.elapsed,radius:saved.radius,seed:saved.seed,hard:!!saved.hard});
+  else { state.seed=(Math.random()*2**31)|0||1; resume=false; }
+  ROOM=state.scenario==="bomb"?bombRoom(state.seed,state.hard):houseRoom(state.seed,state.hard);
   if(ROOM.timer.mode==="down") state.remaining=ROOM.timer.seconds;
   state.mode=mode; state.running=true; buildItems();
   const isB=ROOM.id==="bomb"; document.body.classList.toggle("bomb",isB);
-  $("#progChip").hidden=isB; $("#inviteChip").hidden=isB; $("#notesChip").hidden=!isB; renderNotes();
+  $("#progChip").hidden=isB; $("#notesChip").hidden=true; renderNotes(); renderBag();
   $("#start").hidden=true; $("#hud").hidden=false; objective();
   const prev=mode==="preview"; document.body.classList.toggle("preview",prev); $("#stick").hidden=!prev; $("#previewTag").hidden=!prev; roomShell.visible=prev;
   scene.background=prev?new THREE.Color(0x0e0c14):null; if(prev){ camera.position.set(0,0,0); look.yaw=0; look.pitch=0; }
   if(mode==="cam") setTimeout(()=>toast("Turn to look around. Take real steps to walk toward a <b style='color:#f08a24'>?</b>",5000),isB?3400:0);
   if(isB) toast("The clock is running. Find the clues before you cut.");
-  else if(resume&&saved) toast("Welcome back. Follow the glowing <b style='color:#f08a24'>?</b>");
+  else if(resume) toast(state.hard?"Welcome back.":"Welcome back. Follow the glowing <b style='color:#f08a24'>?</b>");
   else showInvite(true);
 }
 async function startAR(resume){
