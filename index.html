@@ -761,7 +761,9 @@ const easeOutBack=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Ma
 /* ---------- preview controls ---------- */
 const look={yaw:0,pitch:0},move={x:0,y:0},keys={};
 function setupPreviewControls(){ const el=renderer.domElement; let drag=null;
-  el.addEventListener("pointerdown",e=>{ if(state.mode!=="preview"&&!state.manualLook)return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointerdown",e=>{ if(state.mode==="cam"&&!state.manualLook){ nudge={x:e.clientX}; el.setPointerCapture(e.pointerId); return; } if(state.mode!=="preview"&&!state.manualLook)return; drag={x:e.clientX,y:e.clientY}; el.setPointerCapture(e.pointerId); });
+  let nudge=null; el.addEventListener("pointermove",e=>{ if(!nudge)return; cam2.nudge=(cam2.nudge||0)+(e.clientX-nudge.x)*.006; nudge={x:e.clientX}; });
+  el.addEventListener("pointerup",()=>nudge=null);
   el.addEventListener("pointermove",e=>{ if(!drag)return; look.yaw-=(e.clientX-drag.x)*.005; look.pitch=Math.max(-1.3,Math.min(1.3,look.pitch-(e.clientY-drag.y)*.005)); drag={x:e.clientX,y:e.clientY}; });
   el.addEventListener("pointerup",()=>drag=null);
   addEventListener("keydown",e=>{ if(!state.panelOpen) keys[e.key.toLowerCase()]=true; }); addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
@@ -786,14 +788,17 @@ function camError(err,resume){ const n=$("#arNote"); n.className="note warn";
 function startMotion(){ if(motionReady) return; motionReady=true;
   // 1) Chrome's Generic Sensor API: a ready-made orientation quaternion, most reliable on Android
   try{ if("RelativeOrientationSensor" in window){ const sen=new RelativeOrientationSensor({frequency:60,referenceFrame:"screen"});
-      sen.addEventListener("reading",()=>{ if(sen.quaternion){ cam2.sq=sen.quaternion; cam2.src="sensor"; cam2.at=performance.now(); } }); sen.addEventListener("error",()=>{}); sen.start(); } }catch(e){}
+      sen.addEventListener("reading",()=>{ if(sen.quaternion){ cam2.sq=sen.quaternion; cam2.sensorAt=performance.now(); DBG.n.sensor=(DBG.n.sensor||0)+1; } }); sen.addEventListener("error",ev=>{ DBG.sensorErr=(ev.error&&ev.error.name)||"error"; }); sen.start(); } else DBG.sensorErr="api missing"; }catch(e){ DBG.sensorErr="threw "+e.name; }
   // 2) classic orientation events (relative or absolute)
-  const h=e=>{ if(e.beta==null&&e.gamma==null)return; if(cam2.src==="sensor"&&performance.now()-cam2.at<500)return; cam2.ori={alpha:e.alpha||0,beta:e.beta||0,gamma:e.gamma||0}; cam2.src="event"; cam2.at=performance.now(); };
-  addEventListener("deviceorientation",h); addEventListener("deviceorientationabsolute",h);
+  const mk=kind=>e=>{ DBG.n[kind]=(DBG.n[kind]||0)+1; DBG[kind]=[e.alpha,e.beta,e.gamma].map(v=>v==null?"null":Math.round(v)).join(" / ");
+    if(e.alpha==null||e.beta==null) return; cam2[kind]={alpha:e.alpha,beta:e.beta,gamma:e.gamma||0}; cam2[kind+"At"]=performance.now(); };
+  addEventListener("deviceorientation",mk("rel")); addEventListener("deviceorientationabsolute",mk("abs"));
+  try{ if("Gyroscope" in window){ const gy=new Gyroscope({frequency:10}); gy.addEventListener("reading",()=>{ DBG.gyro="yes"; gy.stop(); }); gy.addEventListener("error",ev=>{ DBG.gyro="no ("+(ev.error&&ev.error.name)+")"; }); gy.start(); } else DBG.gyro="api missing"; }catch(e){ DBG.gyro="error "+e.name; }
   // step detection
   let lp=9.8,above=false,last=0;
   addEventListener("devicemotion",e=>{ const a=e.accelerationIncludingGravity; if(!a||a.x==null)return; const m=Math.hypot(a.x,a.y,a.z); lp=lp*.75+m*.25; const now=performance.now();
-    if(!above&&lp>11&&now-last>330){ above=true; last=now; stepForward(); } else if(above&&lp<10.2) above=false; });
+    if(e.rotationRate&&e.rotationRate.alpha!=null) DBG.rot="yes"; else DBG.rot=DBG.rot||"none";
+    if(!above&&lp>11&&now-last>330){ above=true; last=now; DBG.steps=(DBG.steps||0)+1; stepForward(); } else if(above&&lp<10.2) above=false; });
 }
 function stepForward(){ if(state.mode!=="cam"||state.panelOpen||state.done) return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); f.y=0; if(f.lengthSq()<.01) return; f.normalize();
   const nx=cam2.target.clone().addScaledVector(f,.5); const blocked=items.some(it=>it.anchor.visible&&Math.hypot(nx.x-it.anchor.position.x,nx.z-it.anchor.position.z)<(it.def.prop?.75:.5));
@@ -813,16 +818,39 @@ async function startCamMode(resume){
       toast("Your phone isn't sharing motion data, so drag the screen to turn and use the stick to walk.",7000); } },2500);
 }
 function updateCamMode(dt){
-  if(state.manualLook){ camera.position.copy(camera.position); return; }
-  let got=false;
-  if(cam2.sq&&cam2.src==="sensor"){ cam2.q.fromArray(cam2.sq); cam2.q.premultiply(_qR); got=true; }
-  else if(cam2.ori){ const e=cam2.ori, o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
-    oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q); got=true; }
+  if(state.manualLook){ cam2.src="touch"; return; }
+  const now=performance.now(); let got=false, k=1;
+  if(cam2.sq&&now-(cam2.sensorAt||0)<400){ cam2.q.fromArray(cam2.sq); cam2.q.premultiply(_qR); cam2.src="sensor"; got=true; }
+  else { const o=THREE.MathUtils.degToRad((screen.orientation&&screen.orientation.angle)||window.orientation||0);
+    const use=cam2.rel&&now-(cam2.relAt||0)<400?"rel":cam2.abs&&now-(cam2.absAt||0)<400?"abs":null;
+    if(use){ const e=cam2[use]; oriToQuat(THREE.MathUtils.degToRad(e.alpha),THREE.MathUtils.degToRad(e.beta),THREE.MathUtils.degToRad(e.gamma),o,cam2.q); cam2.src=use==="rel"?"gyro events":"compass only"; got=true; k=use==="rel"?.6:.12; } }
   if(got){ if(!cam2.off){ _e.setFromQuaternion(cam2.q,"YXZ"); cam2.off=new THREE.Quaternion().setFromAxisAngle(_y,-_e.y); }
-    camera.quaternion.copy(cam2.off).multiply(cam2.q); }
+    const tgt=new THREE.Quaternion().setFromAxisAngle(_y,cam2.nudge||0).multiply(cam2.off).multiply(cam2.q);
+    if(!cam2.started){ camera.quaternion.copy(tgt); cam2.started=true; } else camera.quaternion.slerp(tgt,Math.min(1,k*dt*60));
+    if(cam2.src==="compass only"&&!cam2.warned){ cam2.warned=true; setTimeout(()=>toast("Your phone has no gyroscope, so turning uses the compass and can wobble. Drag the screen to line things up, or turn on Touch controls in the menu.",8000),1500); } }
   camera.position.lerp(cam2.target,Math.min(1,dt*4));
 }
 const _qR=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2); // sensor world (Z up) → scene (Y up)
+
+function setManual(on){ state.manualLook=on; $("#stick").hidden=!on; document.body.classList.toggle("preview",on);
+  if(on){ _e.setFromQuaternion(camera.quaternion,"YXZ"); look.yaw=_e.y; look.pitch=0; toast("Touch controls on. Drag to turn, use the stick to walk.",4000); }
+  else { cam2.off=null; cam2.started=false; cam2.nudge=0; toast("Motion sensors on. Turn your body to look around.",4000); } }
+
+/* ---------- diagnostics: add &debug=1 to the link ---------- */
+const DBG={n:{}}; const DEBUG=new URLSearchParams(location.search).get("debug")==="1";
+if(DEBUG){ const d=document.createElement("pre"); d.id="dbg"; d.style.cssText="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:50;margin:0;padding:8px 10px;background:rgba(0,0,0,.78);color:#8ff0c8;font:11px/1.35 ui-monospace,monospace;border-radius:8px;pointer-events:none;white-space:pre-wrap;max-height:42%;overflow:hidden";
+  document.body.appendChild(d); const rate={}, prev={};
+  setInterval(()=>{ for(const k in DBG.n){ rate[k]=DBG.n[k]-(prev[k]||0); prev[k]=DBG.n[k]; } },1000);
+  setInterval(()=>{ if(!camera)return; const f=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion); const yaw=Math.round(THREE.MathUtils.radToDeg(Math.atan2(-f.x,-f.z)));
+    const vis=items.filter(it=>it.anchor.visible).length; const near=items.filter(it=>it.anchor.visible).map(it=>`${it.def.name.slice(0,10)}@${it.def.angle}° ${it.d?it.d.toFixed(1):"?"}m`).join(", ");
+    d.textContent=`mode=${state.mode} xrOK=${typeof xrOK!=="undefined"&&xrOK} manual=${!!state.manualLook}
+source=${cam2.src||"none"}  gyro=${DBG.gyro||"?"}  rotationRate=${DBG.rot||"?"}
+sensor: ${rate.sensor||0}/s err=${DBG.sensorErr||"-"}
+rel event: ${rate.rel||0}/s  [${DBG.rel||"-"}]
+abs event: ${rate.abs||0}/s  [${DBG.abs||"-"}]
+view yaw=${yaw}°  pitch=${Math.round(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1,Math.min(1,f.y)))))}°  nudge=${Math.round(THREE.MathUtils.radToDeg(cam2.nudge||0))}°  steps=${DBG.steps||0}
+pos=${camera.position.x.toFixed(2)},${camera.position.z.toFixed(2)}  visible items=${vis}
+${near}`; },250); }
 
 /* ---------- jump scare (kid-friendly ghost) ---------- */
 const camQ=new THREE.Quaternion(),camS=new THREE.Vector3(),fwd=new THREE.Vector3(),upv=new THREE.Vector3(),rightv=new THREE.Vector3();
@@ -1121,8 +1149,9 @@ $("#bagChip").onclick=openBag;
 $("#notesChip").onclick=()=>openPanel(`<div class="eyebrow">Notes</div><h2>What you know</h2>${state.notes.length?`<ul class="notes">${state.notes.map(n=>`<li>${n}</li>`).join("")}</ul>`:"<p>Nothing yet. Find the question marks.</p>"}<div class="row"><button class="btn primary" id="ok">Back</button></div>`,b=>b.querySelector("#ok").onclick=closePanel);
 $("#muteBtn").onclick=()=>{ state.muted=!state.muted; audio(); if(master)master.gain.value=state.muted?0:1; $("#sndOn").hidden=state.muted; $("#sndOff").hidden=!state.muted; };
 $("#menuBtn").onclick=()=>openPanel(`<div class="eyebrow">Paused</div><h2>${ROOM.title}</h2><p>${ROOM.id==="bomb"?"The clock keeps running.":`Time ${fmt(state.elapsed)}. Hints used ${state.hints}.`}</p>
-  <div class="stack"><button class="btn primary" id="resume">Resume</button><button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
-  b=>{ b.querySelector("#resume").onclick=closePanel; b.querySelector("#restart").onclick=()=>{ if(ROOM.id==="house")store.clear(); location.href=location.pathname+location.search; }; const x=b.querySelector("#exit"); if(x)x.onclick=()=>xrSession.end(); });
+  <div class="stack"><button class="btn primary" id="resume">Resume</button>${state.mode==="cam"?`<button class="btn" id="touchCtl">${state.manualLook?"Use motion sensors":"Touch controls (drag to turn)"}</button>`:""}<button class="btn" id="restart">Back to the menu</button>${xrSession?'<button class="btn ghost" id="exit">Leave AR</button>':""}</div>`,
+  b=>{ b.querySelector("#resume").onclick=closePanel;
+       const tc=b.querySelector("#touchCtl"); if(tc) tc.onclick=()=>{ setManual(!state.manualLook); closePanel(); }; b.querySelector("#restart").onclick=()=>{ if(ROOM.id==="house")store.clear(); location.href=location.pathname+location.search; }; const x=b.querySelector("#exit"); if(x)x.onclick=()=>xrSession.end(); });
 
 /* ---------- share / QR ---------- */
 function roomUrl(id){ return location.origin+location.pathname+"?room="+id; }
