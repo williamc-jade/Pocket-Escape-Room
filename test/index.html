@@ -223,9 +223,9 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
         <p class="note" id="modeNote" style="margin:8px 0 18px">One clue at a time, with hints and arrows.</p>
         <label>Room size</label>
         <div class="seg" id="roomSeg">
-          <button data-r="1.6" aria-pressed="false">Small</button>
-          <button data-r="2.2" aria-pressed="true">Medium</button>
-          <button data-r="3.0" aria-pressed="false">Large</button>
+          <button data-r="1.8" aria-pressed="false">Small</button>
+          <button data-r="2.5" aria-pressed="true">Medium</button>
+          <button data-r="3.2" aria-pressed="false">Large</button>
         </div>
       </div>
       <div class="stack">
@@ -368,7 +368,7 @@ const SAVE_KEY="pocket-escape-house-v1";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
-const state={hard:false,level:"easy",scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:2.2,panelOpen:false,muted:false,scaring:false};
+const state={hard:false,level:"easy",scenario:"house",step:0,solved:[],notes:[],hints:0,elapsed:0,remaining:0,running:false,done:false,mode:null,radius:2.5,panelOpen:false,muted:false,scaring:false};
 let renderer,scene,camera,clock,xrSession=null,roomShell,decor=null;
 const items=[]; const camPos=new THREE.Vector3(); const particles=[];
 
