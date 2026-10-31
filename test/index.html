@@ -771,7 +771,7 @@ function updateHud(near,tgt,cam){
   const ex=$("#examine"),guide=$("#guide"),dist=$("#dist");
   examTarget=near; ex.hidden=!(near&&!state.panelOpen&&!state.done&&!state.scaring);
   if(near){ const ty=near.def.type; ex.textContent=ty==="bomb"?"Defuse the bomb":near.def.model==="door"?"Unlock the door":near.def.model==="cage"?"Help Barnaby":"Examine the "+near.def.name.toLowerCase(); ex.classList.toggle("isBomb",ty==="bomb"); }
-  if(!tgt||ROOM.hard||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
+  if(!tgt||ROOM.hard||state.level!=="easy"&&ROOM.id==="house"||state.panelOpen||state.done||state.scaring||(near&&near===tgt)){ guide.hidden=true; dist.hidden=true; return; }
   const view=cam.cameras&&cam.cameras.length?cam.cameras[0]:cam;
   const local=tgt.anchor.position.clone().applyMatrix4(new THREE.Matrix4().copy(cam.matrixWorld).invert());
   const ndc=tgt.anchor.position.clone().project(view); const onScreen=local.z<0&&Math.abs(ndc.x)<.85&&Math.abs(ndc.y)<.8; const W=innerWidth,H=innerHeight;
@@ -947,11 +947,11 @@ function persist(){ if(!ROOM||ROOM.id!=="house"||state.done||!state.running)retu
 /* ---------- start ---------- */
 function pickRoom(id){ state.scenario=id; [...$("#roomPick").children].forEach(x=>x.setAttribute("aria-pressed",x.dataset.s===id)); updateContinue(); }
 $("#roomPick").addEventListener("click",e=>{ const b=e.target.closest(".room"); if(b) pickRoom(b.dataset.s); });
-$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; state.level=b.dataset.m; [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+$("#modeSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; state.level=b.dataset.m; $("#continueBtn").hidden=true; // picking a level means a new game [...$("#modeSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
   $("#modeNote").textContent={easy:"One clue at a time, with hints and arrows.",medium:"Two clues out at a time. No arrows or decoder keys, but hints if you need them.",hard:"Every clue is out at once, in any order. No hints, no keys, no arrows."}[state.level]; });
 $("#roomSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; [...$("#roomSeg").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); state.radius=+b.dataset.r; });
 const saved=store.get();
-function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue where you left off (clue ${saved.step+1})`; }
+function updateContinue(){ const cb=$("#continueBtn"); cb.hidden=!(state.scenario==="house"&&saved&&saved.step>0); if(!cb.hidden) cb.textContent=`Continue saved ${saved.level||(saved.hard?"hard":"easy")} game (clue ${saved.step+1})`; }
 // deep link: ?room=house or ?room=bomb (also #house / #bomb)
 (function(){ const q=new URLSearchParams(location.search).get("room")||location.hash.slice(1); if(q!=="house"&&q!=="bomb")return; pickRoom(q);
   $("#pickField").hidden=true; const b=$("#invitedBanner"); b.hidden=false;
