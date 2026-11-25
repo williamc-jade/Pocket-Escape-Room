@@ -262,13 +262,11 @@ function houseRoom(){
         after:"Read the newspaper. There's an old one pinned to a crumbling wall." },
       { name:"Old Newspaper", model:"wallNews", angle:60, dist:1, y:-.45, prop:true, type:"capitals", answer:"CHEST",
         lead:"Probably just a Halloween decoration. Some of the letters look odd, though.",
-        ask:"Circle the capital letters. What do they spell?",
-        hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.","Write down only the capital letters, in order. There are five."],
+                hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.","Write down only the capital letters, in order. There are five."],
         after:"C-H-E-S-T. A strange thing to hide in a newspaper. Find the chest." },
       { name:"Treasure Chest", model:"chest", angle:105, dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:"RADIO",
-        lead:"The chest's lock has a note: <em>Every letter took one step forward. A became B.</em>",
-        ask:"Step each letter back by one. What is the word?",
-        after:"Inside the chest: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
+        lead:"The chest's lock has a strange word scratched into it.",
+                after:"Inside the chest: a tiny brass bell and a scrap of paper. <em>Listen to the radio.</em>" },
       { name:"Old Radio", model:"radio", angle:150, dist:.95, y:-.5, type:"morse", answer:"BOO",
         lead:"The radio beeps the same signal over and over. A key is taped to its side.", ask:"What is the radio saying?",
         minikey:["B -...","G --.","O ---","S ...","T -"],
@@ -276,13 +274,12 @@ function houseRoom(){
       { name:"?", model:"none", angle:265, dist:1, y:-.1, type:"scare", word:GHOST_WORD,
         after:"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
       { name:"Portrait", model:"wallPortrait", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
-        lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame, using a backwards alphabet:",
+        lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame:",
         ask:"Where is Barnaby?",
         after:"Barnaby is locked in a cage somewhere in this house. Underneath the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>" },
       { name:"Coffin", model:"coffin", angle:190, dist:.95, y:-1.02, prop:true, type:"riddle", answer:INVITE_WORD,
         lead:"Carved on the lid: <em>I open only for invited guests.</em>", display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.",
-        ask:"What word was red on your invitation?",
-        hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
+                hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
         after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
       { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD,
         lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
@@ -296,7 +293,7 @@ function houseRoom(){
         lead:"The front door's lock has no power. Reconnect each wire to its matching colour.",
         after:"The lights flicker on. The front door's lock glows with zigzag letters." },
       { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true,
-        lead:"Barnaby whispers: <em>\"It's a zigzag code! The word was written in a zigzag, up and down, then split into two rows. Weave them back together: top, bottom, top, bottom.\"</em>",
+        lead:"Zigzag letters glow on the lock.",
         ask:"What is the password?" }
     ],
     ending:"The front door swings open into cool night air. Barnaby lights his lantern and tips his hat. \"Same time next year?\" Behind you, the house on Hollow Lane fades away like fog."
@@ -313,7 +310,7 @@ function bombRoom(){
       { name:"The Bomb", model:"bomb", angle:0, dist:.7, y:-.4, type:"bomb", always:true,
         lead:"Three wires. Cut the right one and it stops. Cut the wrong one and it doesn't." },
       { name:"Torn Note", model:"note", angle:95, dist:1, y:-.15, type:"shift", shift:1, answer:"NOT "+w1, info:true,
-        lead:"A note taped under the desk: <em>Every letter took one step forward. A became B.</em>", ask:"Step each letter back by one:",
+        lead:"A note taped under the desk.",
         after:`Do NOT cut the ${w1} wire.` },
       { name:"Sensor Panel", model:"panel", angle:200, dist:1, y:-.1, type:"wires", info:true,
         lead:"The tripwire sensor is disconnected. Reconnect it to read the log.",
@@ -778,7 +775,7 @@ function hintsFor(d){
   return [];
 }
 function displayFor(d){
-  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}<small>A→B · B→C · C→D …</small></div>`;
+  if(d.type==="shift") return `<div class="cipher type">${caesar(d.answer,d.shift)}</div>`;
   if(d.type==="atbash") return `<div class="cipher">${atbash(d.answer)}</div><div class="hintbox" style="margin:0 0 14px">Carved key on the frame:${alphaTable(A,[...A].reverse().join(""))}</div>`;
   if(d.type==="morse") return `<div class="cipher">${toMorse(d.answer)}<div class="minikey">${(d.minikey||[]).map(k=>`<span>${k}</span>`).join("")}</div></div><div class="row" style="margin:-4px 0 14px"><button class="btn" id="play"><span id="led" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f3c56b;opacity:.15;margin-right:8px;vertical-align:middle"></span>Play the signal</button></div>`;
   if(d.type==="capitals") return `<div class="news"><div class="mast">Hollow Lane Gazette</div><div class="date">One year ago · Halloween edition</div><h4>Lamplighter Missing!</h4>${NEWS_BODY}</div>`;
