@@ -263,12 +263,12 @@ function houseRoom(){
     id:"house", title:"The House on Hollow Lane", sequential:false, timer:{mode:"up"}, ambient:"house", decor:true,
     stations:[
       { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
-        lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
+        lead:"The table is set for guests. A place card sits by your chair.",
         display:".REPAPSWEN EHT DAER", ask:"What does the card tell you to read?",
         hints:["Try reading it from right to left.","Read it backwards: READ THE ... ?"],
         after:"Read the newspaper. There's an old one pinned to a crumbling wall." },
       { name:"Old Newspaper", model:"wallNews", angle:60, dist:1, y:-.45, prop:true, type:"capitals", answer:"CHEST",
-        lead:"Probably just a Halloween decoration. Some of the letters look odd, though.",
+        lead:"Probably just a Halloween decoration.",
                 hints:["Ignore the headline. Look in the story for capital letters that shouldn't be there.","Write down only the capital letters, in order. There are five."],
         after:"C-H-E-S-T. A strange thing to hide in a newspaper. Find the chest." },
       { name:"Treasure Chest", model:"chest", angle:105, dist:.9, y:-1.08, prop:true, type:"shift", shift:1, answer:"RADIO",
@@ -285,7 +285,7 @@ function houseRoom(){
         ask:"Where is Barnaby?",
         after:"Barnaby is locked in a cage somewhere in this house. Underneath the portrait, scratched in the paint: <em>The key sleeps in the coffin.</em>" },
       { name:"Coffin", model:"coffin", angle:190, dist:.95, y:-1.02, prop:true, type:"riddle", answer:INVITE_WORD,
-        lead:"Carved on the lid: <em>I open only for invited guests.</em>", display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.",
+        lead:"Carved on the lid: <em>I open only for invited guests.</em>",
                 hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
         after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
       { name:"Fuse Box", model:"wallFuse", angle:28, dist:1, y:-.4, prop:true, type:"wires",
@@ -293,8 +293,7 @@ function houseRoom(){
         after:"The lights flicker on. Something glows on the panel.", reveal:'<div class="ireveal">I</div>' },
       { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD, needs:["?","Coffin"],
         locked:"Barnaby waves from inside, but you're not ready to open this lock yet.",
-        lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
-        display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
+        lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween.\"</em>",
         hints:["Think back to the ghost that zoomed at you. It shouted a word.","It's orange, round, and you carve a face into it."],
         after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"But the front door is locked. The house only lets people go when it's happy. Play its music box!\"</em>" },
       { name:"Music Box", model:"musicbox", angle:300, dist:.75, y:-.55, type:"simon",
@@ -329,7 +328,7 @@ function bombRoom(){
         lead:"The tripwire sensor is disconnected. Reconnect it to read the log.",
         after:`Sensor log: the ${w2} wire is live. Cutting it sets off the charge.` },
       { name:"Lock Box", model:"lockbox", angle:285, dist:.95, y:-.35, type:"number", answer:"13", info:true,
-        lead:"A two-digit lock. Scratched on the lid:", display:"1 · 1 · 2 · 3 · 5 · 8 · ?", ask:"What comes next?",
+        lead:"Scratched on the lid:", display:"1 · 1 · 2 · 3 · 5 · 8 · ?", ask:"What comes next?",
         hints:["Each number comes from the two before it.","Add the last two: 5 + 8."],
         after:`Inside is a card with a riddle: "${rq} Cut me."` },
       { name:"Override Keypad", model:"keypad", angle:150, dist:.9, y:-.2, type:"simon", bonus:45,
@@ -353,6 +352,7 @@ const alphaTable=(top,bot)=>{ top=[...top]; bot=[...bot]; const half=Math.ceil(t
 const NEWS_BODY=`barnaby finCh, the friendly town lamplighter, was last seen walking toward Hollow lane on halloween night. nEighbours say he loved riddles and always carried hiS lantern. iT was found in the grass the next morning. if you see him, please tell the sheriff.`;
 
 const CANDLE_I=[1,1,1,0,1,0,1,1,1]; // top row, centre, bottom row
+const HOUSE_HINTS=5;
 const SAVE_KEY="pocket-escape-house-v2";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
@@ -787,7 +787,6 @@ function closePanel(){ clearTimeout(hintTimer); if(!state.panelOpen)return; stat
 $("#panel").addEventListener("click",e=>{ if(e.target.id==="panel")closePanel(); });
 function wrongFx(el){ sfx.wrong(); if(navigator.vibrate)navigator.vibrate([40,40,40]); el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
 
-const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse code",riddle:"Riddle",number:"Number lock",wires:"Repair task",simon:"Pattern task",backwards:"Backwards writing",capitals:"Hidden message",rail:"Zigzag code",candles:"Candle puzzle"};
 function hintsFor(d){
   if(d.hints) return d.hints;
   if(d.type==="shift") return [`Each letter moved ${d.shift} step forward. Move each one back ${d.shift}: B becomes A, C becomes B.`,"Top row is what you see, bottom row is what it means:"+alphaTable(A,[...A].map((c,i)=>A[(i-d.shift+26)%26]).join(""))];
@@ -830,12 +829,14 @@ function openStation(it){
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
   if(d.type==="candles") mid+=`<div class="cgrid" id="cg">${CANDLE_I.map((_,i)=>`<button aria-label="Candle ${i+1}" aria-pressed="false"></button>`).join("")}</div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
-  openPanel(`<div class="eyebrow">${TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
+  openPanel(`<h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
     body.querySelector("#close").onclick=closePanel;
     const hb=body.querySelector("#hintBtn");
-    const showHint=()=>{ hl=Math.min(hints.length,hl+1); state.hints++; body.querySelector("#hint").innerHTML=`<div class="hintbox">${hints[hl-1]}</div>`; hb.classList.remove("ready"); if(hl>=hints.length) hb.disabled=true; };
-    if(hb){ hb.onclick=showHint; hintTimer=setTimeout(()=>{ if(hl===0&&state.panelOpen){ hb.classList.add("ready"); hb.textContent="Need a hint?"; sfx.giggle(); } },60000); }
+    const capped=ROOM.id==="house", left=()=>HOUSE_HINTS-state.hints;
+    const label=(s)=>{ hb.textContent=capped?(left()>0?`${s} (${left()} left)`:"No hints left"):s; if(capped&&left()<=0) hb.disabled=true; };
+    const showHint=()=>{ if(capped&&left()<=0)return; hl=Math.min(hints.length,hl+1); state.hints++; body.querySelector("#hint").innerHTML=`<div class="hintbox">${hints[hl-1]}</div>`; hb.classList.remove("ready"); label("Hint"); if(hl>=hints.length) hb.disabled=true; };
+    if(hb){ label("Hint"); hb.onclick=showHint; hintTimer=setTimeout(()=>{ if(hl===0&&state.panelOpen&&!hb.disabled){ hb.classList.add("ready"); label("Need a hint?"); sfx.giggle(); } },60000); }
     const done=()=>{ clearTimeout(hintTimer); d.final?winHouse(it):solveStation(it); };
     if(typed) letterEntry(body,d,done);
     if(d.type==="morse") body.querySelector("#play").onclick=()=>playMorse(d.answer,body.querySelector("#led"));
@@ -909,7 +910,7 @@ function winHouse(it){ if(state.done)return; state.done=true; state.solved.push(
   it.model.userData.unlock(); [0,400,800,1200].forEach(ms=>setTimeout(()=>items.forEach(x=>{ if(x.anchor.visible&&x.def.prop) burst(x.anchor.position,[0xf08a24,0x8ff0c8,0xffd27a][ms/400%3],40,1.4); }),ms));
   objective(); store.clear(); $("#examine").hidden=true;
   endCard(`<div class="eyebrow">You escaped</div><h2 class="big">Happy Halloween!</h2><p>${ROOM.ending}</p>
-    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>Hints used</span><b>${state.hints}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
+    <div class="stat"><span>Time</span><b>${fmt(state.elapsed)}</b></div><div class="stat"><span>Hints used</span><b>${state.hints} of ${HOUSE_HINTS}</b></div><div class="stat"><span>Barnaby</span><b>Rescued</b></div>
     <div class="row"><button class="btn ghost" id="look">Look around</button><button class="btn primary" id="again">Play again</button></div>`,3400); }
 function defuse(it){ if(state.done)return; state.done=true; sfx.defuse(); flash("win"); drawBombScreen(it.model.userData.screen,0,"safe"); document.body.classList.remove("urgent");
   burst(it.anchor.position,0x3fbf6a,80); if(navigator.vibrate)navigator.vibrate([40,60,40]); objective();
