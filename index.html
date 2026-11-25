@@ -126,6 +126,13 @@ body.preview #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 220px)}
 .simon{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:300px;margin:4px auto 6px}
 .simon button{aspect-ratio:1.4;border-radius:16px;opacity:.45;transition:opacity .08s,transform .08s;max-width:100%}
 .simon button.lit{opacity:1;transform:scale(.96);box-shadow:0 0 30px currentColor}
+.cgrid{display:grid;grid-template-columns:repeat(3,64px);gap:14px;justify-content:center;margin:6px 0 16px}
+.cgrid button{height:84px;border:0;border-radius:10px;background:#1a1622;position:relative;cursor:pointer}
+.cgrid button::before{content:"";position:absolute;left:50%;bottom:10px;width:18px;height:42px;margin-left:-9px;background:#f1e5cc;border-radius:3px}
+.cgrid button::after{content:"";position:absolute;left:50%;bottom:54px;width:14px;height:20px;margin-left:-7px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#ffc35a;box-shadow:0 0 14px 4px rgba(255,170,60,.7);opacity:0;transition:opacity .15s}
+.cgrid button.lit::after{opacity:1}
+.ireveal{position:relative;width:90px;margin:8px auto 18px;text-align:center;font:700 88px/1 Georgia,serif;color:#ffd27a;text-shadow:0 0 18px rgba(255,170,60,.8);padding-top:34px}
+.ireveal::before{content:"";position:absolute;left:50%;top:0;width:18px;height:28px;margin-left:-9px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#ffc35a;box-shadow:0 0 16px 5px rgba(255,170,60,.7)}
 .simonmsg{text-align:center;font:600 12px var(--f-mono);letter-spacing:.12em;color:var(--muted);margin:6px 0}
 .wirecut{display:flex;flex-direction:column;gap:10px;margin:8px 0}
 .wirecut button{height:56px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#1f1b27;border:2px solid transparent;font-weight:700}
@@ -253,7 +260,7 @@ const INVITATION=`<div class="invite"><h3>You're Invited</h3>
 
 function houseRoom(){
   return {
-    id:"house", title:"The House on Hollow Lane", sequential:true, timer:{mode:"up"}, ambient:"house", decor:true,
+    id:"house", title:"The House on Hollow Lane", sequential:false, timer:{mode:"up"}, ambient:"house", decor:true,
     stations:[
       { name:"Dining Table", model:"table", angle:0, dist:.8, y:-.58, prop:true, type:"backwards", answer:"NEWSPAPER",
         lead:"The table is set for guests. A place card sits by your chair, but the writing looks... backwards.",
@@ -272,7 +279,7 @@ function houseRoom(){
         minikey:["B -...","G --.","O ---","S ...","T -"],
         after:"Boo? From somewhere behind you, something giggles." },
       { name:"?", model:"none", angle:265, dist:1, y:-.1, type:"scare", word:GHOST_WORD,
-        after:"A ghost! It zoomed away, but it shouted a word. Remember it. Now find the portrait." },
+        after:"A ghost! It zoomed away, but it shouted a word. Remember it." },
       { name:"Portrait", model:"wallPortrait", angle:335, dist:1, y:-.4, prop:true, type:"atbash", answer:"CAGE",
         lead:"A painting of a smiling man holding a lantern. Wait... that's <em>Barnaby Finch</em>, the missing man from the newspaper! It wasn't a decoration. Letters are carved into the frame:",
         ask:"Where is Barnaby?",
@@ -281,18 +288,24 @@ function houseRoom(){
         lead:"Carved on the lid: <em>I open only for invited guests.</em>", display:"SPEAK THE WORD YOUR INVITATION WROTE IN RED.",
                 hints:["Tap Invite at the top of the screen to read your invitation again.","It's something you carry to light the way."],
         after:"The lid creaks open. No vampire, just a rusty old key. Now, where's that cage?" },
-      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD,
+      { name:"Fuse Box", model:"wallFuse", angle:28, dist:1, y:-.4, prop:true, type:"wires",
+        lead:"The house has no power. Reconnect each wire to its matching colour.",
+        after:"The lights flicker on. Something glows on the panel.", reveal:'<div class="ireveal">I</div>' },
+      { name:"Iron Cage", model:"cage", angle:230, dist:.95, y:-.72, prop:true, type:"riddle", answer:GHOST_WORD, needs:["?","Coffin"],
+        locked:"Barnaby waves from inside, but you're not ready to open this lock yet.",
         lead:"Barnaby Finch is inside, waving! <em>\"You came! The ghost locked me in last Halloween. The key turns, but the lock also wants the ghost's secret word.\"</em>",
         display:"WHAT WORD DID THE GHOST SHOUT AT YOU?", ask:"The ghost's word:",
         hints:["Think back to the ghost that zoomed at you. It shouted a word.","It's orange, round, and you carve a face into it."],
         after:"<em>\"Free at last! Thank you!\"</em> Barnaby stretches. <em>\"But the front door is locked. The house only lets people go when it's happy. Play its music box!\"</em>" },
       { name:"Music Box", model:"musicbox", angle:300, dist:.75, y:-.55, type:"simon",
         lead:"A little music box with four coloured gems. Watch which ones light up, then play them back.",
-        after:"The house hums a happy tune. Over by the table, a fuse box sparks." },
-      { name:"Fuse Box", model:"wallFuse", angle:28, dist:1, y:-.4, prop:true, type:"wires",
-        lead:"The front door's lock has no power. Reconnect each wire to its matching colour.",
-        after:"The lights flicker on. The front door's lock glows with zigzag letters." },
-      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true,
+        after:"The house hums a happy tune." },
+      { name:"Candles", model:"candleGrid", angle:128, dist:.6, y:-.9, prop:true, type:"candles", needs:["Fuse Box"],
+        lead:"Nine candles stand in a square, all unlit.",
+        locked:"The wicks won't take a flame yet.",
+        after:"The candles flare. Across the room, the front door's lock glows with zigzag letters." },
+      { name:"Front Door", model:"door", angle:280, dist:1.05, y:-.32, prop:true, type:"rail", answer:"FREEDOM", final:true, needs:"all",
+        locked:"The door won't budge. The house isn't finished with you yet.",
         lead:"Zigzag letters glow on the lock.",
         ask:"What is the password?" }
     ],
@@ -339,7 +352,8 @@ const railRows=w=>[[...w].filter((_,i)=>i%2===0).join(""),[...w].filter((_,i)=>i
 const alphaTable=(top,bot)=>{ top=[...top]; bot=[...bot]; const half=Math.ceil(top.length/2); return `<div class="tbl">${[0,half].map(s=>`<table><tr>${top.slice(s,s+half).map(c=>`<td>${c}</td>`).join("")}</tr><tr>${bot.slice(s,s+half).map(c=>`<td style="color:#f08a24">${c}</td>`).join("")}</tr></table>`).join("")}</div>`; };
 const NEWS_BODY=`barnaby finCh, the friendly town lamplighter, was last seen walking toward Hollow lane on halloween night. nEighbours say he loved riddles and always carried hiS lantern. iT was found in the grass the next morning. if you see him, please tell the sheriff.`;
 
-const SAVE_KEY="pocket-escape-house-v1";
+const CANDLE_I=[1,1,1,0,1,0,1,1,1]; // top row, centre, bottom row
+const SAVE_KEY="pocket-escape-house-v2";
 const store={get(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){return null}},set(v){try{localStorage.setItem(SAVE_KEY,JSON.stringify(v))}catch(e){}},clear(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}};
 
 let ROOM=null;
@@ -429,6 +443,9 @@ function portraitTex(){ return canvasTex(320,400,(g,w,h)=>{ const bg=g.createRad
   g.fillStyle="#8a5a3a"; g.beginPath(); g.ellipse(160,250,40,10,0,0,Math.PI); g.fill();
   const lg=g.createRadialGradient(262,300,4,262,300,60); lg.addColorStop(0,"rgba(255,210,120,1)"); lg.addColorStop(1,"rgba(255,170,60,0)"); g.fillStyle=lg; g.fillRect(190,230,140,140);
   g.fillStyle="#2b2018"; g.fillRect(246,270,32,6); g.fillRect(246,320,32,6); g.fillStyle="#ffd27a"; g.fillRect(250,276,24,44); }); }
+function iFlameTex(){ return canvasTex(140,200,(g,w,h)=>{ g.shadowColor="rgba(255,170,60,.9)"; g.shadowBlur=18; g.fillStyle="#ffc35a";
+  g.beginPath(); g.moveTo(70,10); g.bezierCurveTo(92,40,86,62,70,70); g.bezierCurveTo(54,62,48,40,70,10); g.fill();
+  g.fillStyle="#ffd27a"; g.font="bold 120px Georgia, serif"; g.textAlign="center"; g.textBaseline="alphabetic"; g.fillText("I",70,190); }); }
 function bombScreenTex(){ return canvasTex(256,96,()=>{}); }
 function drawBombScreen(tex,secs,st){ const {g}=tex.userData; g.fillStyle="#050302"; g.fillRect(0,0,256,96);
   g.font='700 64px "JetBrains Mono", monospace'; g.textAlign="center"; g.textBaseline="middle"; g.fillStyle=st==="safe"?"#3fbf6a":"#ff3b2f"; g.shadowColor=g.fillStyle; g.shadowBlur=14;
@@ -472,7 +489,13 @@ const MODELS={
     g.add(mesh(new THREE.PlaneGeometry(.34,.44),M.tex(portraitTex()),0,-.04,.077)); return g; },
   wallFuse(){ const g=wallSection(.7,1); g.add(box(.3,.38,.08,M.steel(),0,-.05,.09));
     [0xe2483d,0x3f8cf0,0xf2c94c,0xe46bb4].forEach((c,i)=>{ g.add(wireTube([[-.09,.07-i*.07,.135],[0,.05-i*.07+.03,.16],[.09,.07-i*.07,.135]],c)); });
-    const bolt=mesh(new THREE.CircleGeometry(.025,3),M.glow(0xf2c94c),0,-.2,.132); g.add(bolt); g.userData.flicker=bolt; return g; },
+    const bolt=mesh(new THREE.CircleGeometry(.025,3),M.glow(0xf2c94c),0,-.2,.132); g.add(bolt); g.userData.flicker=bolt;
+    const sign=mesh(new THREE.PlaneGeometry(.14,.2),new THREE.MeshBasicMaterial({map:iFlameTex(),transparent:true}),0,.29,.06); sign.visible=false; g.add(sign);
+    g.userData.unlock=()=>sign.visible=true; return g; },
+  candleGrid(){ const g=new THREE.Group(); g.add(box(.42,.04,.42,M.darkwood()));
+    for(const x of [-.18,.18]) for(const z of [-.18,.18]) g.add(box(.03,.4,.03,M.darkwood(),x,-.22,z));
+    const flames=[]; for(let r=0;r<3;r++) for(let c=0;c<3;c++){ const k=candle(.1); k.position.set((c-1)*.12,.02,(r-1)*.12); k.userData.flame.visible=false; g.add(k); flames.push(k.userData.flame); }
+    g.userData.flames=flames; g.userData.unlock=()=>flames.forEach((f,i)=>f.visible=!!CANDLE_I[i]); return g; },
   chest(){ const g=new THREE.Group(); g.add(box(.5,.26,.32,M.wood(),0,0,0));
     const lidPivot=new THREE.Group(); lidPivot.position.set(0,.13,-.16); g.add(lidPivot);
     const lid=mesh(new THREE.CylinderGeometry(.16,.16,.5,20,1,false,0,Math.PI),M.wood(),0,0,.16); lid.rotation.z=Math.PI/2; lid.rotation.y=0; lid.rotation.x=0; lidPivot.add(lid);
@@ -606,6 +629,7 @@ function buildItems(){
   items.forEach(it=>{ if(state.solved.includes(it.i)&&it.model.userData.unlock&&it.def.model!=="door"){ it.model.userData.unlock(); it.model.userData.opening=1; } });
 }
 const isSolved=it=>state.solved.includes(it.i);
+const isLocked=it=>{ const n=it.def.needs; if(!n)return false; return items.some(x=>x!==it&&(n==="all"||n.includes(x.def.name))&&!isSolved(x)); };
 
 /* ---------- particles ---------- */
 function burst(pos,color=0xf08a24,n=46,speed=1){ const geo=new THREE.BufferGeometry(); const p=new Float32Array(n*3); const v=[];
@@ -721,7 +745,7 @@ function loop(time){
   const cur=ROOM.sequential?items[state.step]:null;
   const near=cands.filter(it=>it.def.always?it.d<reveal*1.15:it.mix>.6).sort((a,b)=>a.d-b.d)[0]||null;
   let guideTo=cur||null;
-  if(!ROOM.sequential){ const puzzles=cands.filter(it=>it.def.type!=="bomb").sort((a,b)=>a.d-b.d); guideTo=puzzles[0]||cands.find(it=>it.def.type==="bomb")||null; }
+  if(!ROOM.sequential){ const pool=items.filter(it=>it.anchor.visible&&it.d!==undefined&&!isSolved(it)&&it.def.type!=="bomb"&&!isLocked(it)).sort((a,b)=>a.d-b.d); guideTo=pool[0]||cands.find(it=>it.def.type==="bomb")||null; }
   updateScare(dt,cam,t); animateDecor(dt,t);
   for(let k=particles.length-1;k>=0;k--){ const P=particles[k]; P.life-=dt*1.1; const a=P.pts.geometry.attributes.position;
     for(let i=0;i<P.v.length;i++){ a.array[i*3]+=P.v[i].x*dt; a.array[i*3+1]+=P.v[i].y*dt; a.array[i*3+2]+=P.v[i].z*dt; P.v[i].y-=dt*.6; }
@@ -763,7 +787,7 @@ function closePanel(){ clearTimeout(hintTimer); if(!state.panelOpen)return; stat
 $("#panel").addEventListener("click",e=>{ if(e.target.id==="panel")closePanel(); });
 function wrongFx(el){ sfx.wrong(); if(navigator.vibrate)navigator.vibrate([40,40,40]); el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
 
-const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse code",riddle:"Riddle",number:"Number lock",wires:"Repair task",simon:"Pattern task",backwards:"Backwards writing",capitals:"Hidden message",rail:"Zigzag code"};
+const TYPE_LABEL={shift:"Shift code",atbash:"Backwards alphabet",morse:"Morse code",riddle:"Riddle",number:"Number lock",wires:"Repair task",simon:"Pattern task",backwards:"Backwards writing",capitals:"Hidden message",rail:"Zigzag code",candles:"Candle puzzle"};
 function hintsFor(d){
   if(d.hints) return d.hints;
   if(d.type==="shift") return [`Each letter moved ${d.shift} step forward. Move each one back ${d.shift}: B becomes A, C becomes B.`,"Top row is what you see, bottom row is what it means:"+alphaTable(A,[...A].map((c,i)=>A[(i-d.shift+26)%26]).join(""))];
@@ -798,11 +822,13 @@ function letterEntry(body,d,onCheck){
 function openStation(it){
   const d=it.def;
   if(d.type==="bomb") return openBomb(it);
+  if(isLocked(it)) return openPanel(`<div class="eyebrow">Locked</div><h2>${d.name}</h2><p>${d.locked||"Not yet."}</p><div class="row"><button class="btn ghost" id="close">Step back</button></div>`,b=>b.querySelector("#close").onclick=closePanel);
   const hints=hintsFor(d); let hl=0;
   const typed=["shift","atbash","morse","riddle","number","backwards","capitals","rail"].includes(d.type);
   let mid=displayFor(d);
   if(typed) mid+=`${d.ask?`<div class="ask">${d.ask}</div>`:""}<div class="answer" id="ans"></div><div class="keys" id="kb"></div>`;
   if(d.type==="wires") mid+=`<div class="wirebox" id="wb"><svg id="wsvg"></svg><div class="status" id="wstat">0 / 4 CONNECTED</div></div>`;
+  if(d.type==="candles") mid+=`<div class="cgrid" id="cg">${CANDLE_I.map((_,i)=>`<button aria-label="Candle ${i+1}" aria-pressed="false"></button>`).join("")}</div>`;
   if(d.type==="simon") mid+=`<div class="simonmsg" id="smsg">TAP WATCH TO START</div><div class="simon" id="simon">${["#e2483d","#3fbf6a","#3f8cf0","#f2c94c"].map((c,i)=>`<button data-i="${i}" style="background:${c};color:${c}" aria-label="Gem ${i+1}"></button>`).join("")}</div>`;
   openPanel(`<div class="eyebrow">${TYPE_LABEL[d.type]||""}</div><h2>${d.name}</h2><p>${d.lead}</p>${mid}<div id="hint"></div>
     <div class="row">${hints.length?'<button class="btn ghost" id="hintBtn">Hint</button>':""}${d.type==="simon"?'<button class="btn primary" id="watch">Watch</button>':""}<button class="btn ghost" id="close">Step back</button></div>`, body=>{
@@ -815,6 +841,7 @@ function openStation(it){
     if(d.type==="morse") body.querySelector("#play").onclick=()=>playMorse(d.answer,body.querySelector("#led"));
     if(d.type==="wires") mountWires(body,done);
     if(d.type==="simon") mountSimon(body,done);
+    if(d.type==="candles") mountCandles(body,done);
   });
 }
 function mountWires(body,done){
@@ -837,6 +864,9 @@ function mountWires(body,done){
     drag=null; draw(); if(linked.size===4) setTimeout(done,400); });
   requestAnimationFrame(draw);
 }
+function mountCandles(body,done){ const bs=[...body.querySelectorAll("#cg button")]; let fin=false;
+  bs.forEach(b=>b.onclick=()=>{ if(fin)return; const on=b.classList.toggle("lit"); b.setAttribute("aria-pressed",on); sfx.key();
+    if(bs.every((x,i)=>x.classList.contains("lit")===!!CANDLE_I[i])){ fin=true; setTimeout(done,500); } }); }
 function mountSimon(body,done){
   const btns=[...body.querySelectorAll("#simon button")],msg=body.querySelector("#smsg"),notes=[392,523,659,784];
   const seq=Array.from({length:5},()=>Math.floor(Math.random()*4)); let round=3,pos=0,locked=true;
@@ -850,11 +880,11 @@ function mountSimon(body,done){
 function solveStation(it){
   const d=it.def; sfx.solve(); burst(it.anchor.position,0x8ff0c8,60); if(navigator.vibrate)navigator.vibrate([20,60,20]);
   if(it.model.userData.unlock){ it.model.userData.unlock(); sfx.unlock(); }
-  state.solved.push(it.i); if(ROOM.sequential) state.step++;
+  state.solved.push(it.i); state.step++;
   if(d.info){ state.notes.push(d.after); renderNotes(); }
   if(d.bonus){ state.remaining+=d.bonus; lastSec=-1; }
   persist();
-  openPanel(`<div class="eyebrow">Solved</div><h2>${d.answer||"Done!"}</h2><p class="solvedline">${d.after}</p><div class="row"><button class="btn primary" id="go">Keep going</button></div>`,
+  openPanel(`<div class="eyebrow">Solved</div><h2>${d.answer||"Done!"}</h2><p class="solvedline">${d.after}</p>${d.reveal||""}<div class="row"><button class="btn primary" id="go">Keep going</button></div>`,
     b=>b.querySelector("#go").onclick=()=>{ closePanel(); objective(); });
 }
 function openBomb(it){
